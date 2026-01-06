@@ -3,45 +3,39 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
 
-        <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+    <body class="min-h-screen bg-white dark:bg-zinc-800 antialiased">
 
-            <div class="flex items-center justify-between lg:hidden mb-6">
-                <a href="{{ route('dashboard') }}" class="flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
-                    <x-app-logo />
-                </a>
-            </div>
+        <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
+            <flux:sidebar.header>
+                <flux:sidebar.brand
+                    :href="route('dashboard')"
+                    name="Laravel Starter Kit"
+                    wire:navigate
+                >
+                    <div class="flex aspect-square size-8 items-center justify-center rounded-md bg-accent-content text-accent-foreground">
+                        <x-app-logo-icon class="size-5 fill-current text-white dark:text-black" />
+                    </div>
+                </flux:sidebar.brand>
 
-            <a href="{{ route('dashboard') }}" class="ms-1 hidden items-center space-x-2 rtl:space-x-reverse lg:flex" wire:navigate>
-                <x-app-logo />
-            </a>
+                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
+            </flux:sidebar.header>
 
-            <flux:navlist variant="outline">
-                <flux:navlist.group :heading="__('Platform')" class="grid">
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
-                </flux:navlist.group>
-            </flux:navlist>
+            <flux:sidebar.nav>
+                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
+            </flux:sidebar.nav>
 
-            <flux:spacer />
+            <flux:sidebar.spacer />
 
-            <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                {{ __('Repository') }}
-                </flux:navlist.item>
+            <flux:sidebar.nav>
+                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">{{ __('Repository') }}</flux:sidebar.item>
+                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">{{ __('Documentation') }}</flux:sidebar.item>
+            </flux:sidebar.nav>
 
-                <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                {{ __('Documentation') }}
-                </flux:navlist.item>
-            </flux:navlist>
-
-            <!-- Desktop User Menu -->
-            <flux:dropdown class="hidden lg:block" position="bottom" align="start">
-                <flux:profile
+            <flux:dropdown position="top" align="start" class="max-lg:hidden">
+                <flux:sidebar.profile
                     :name="auth()->user()->name"
                     :initials="auth()->user()->initials()"
-                    icon:trailing="chevrons-up-down"
                 />
 
                 <flux:menu class="w-[220px]">
@@ -82,9 +76,6 @@
             </flux:dropdown>
         </flux:sidebar>
 
-
-
-        <!-- Mobile User Menu -->
         <flux:header class="lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
