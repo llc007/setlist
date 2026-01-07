@@ -14,11 +14,10 @@ Route::get('/', function () {
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
-//admin dashboard
+// admin dashboard
 Route::view('admin', 'admin')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('admin');
-
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
