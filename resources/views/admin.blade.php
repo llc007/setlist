@@ -24,18 +24,20 @@
         </header>
 
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div
-                class="flex flex-col gap-3 rounded-xl p-5 bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-slate-800 transition-transform hover:-translate-y-1 duration-300">
+            <a href="{{ route('admin.canciones') }}" wire:navigate
+                class="block flex flex-col gap-3 rounded-xl p-5 bg-white dark:bg-card-dark 
+                shadow-sm border border-slate-200 dark:border-slate-800 transition-transform hover:-translate-y-1 duration-300
+                cursor-pointer no-underline">
                 <div class="flex items-center justify-between">
                     <p class="text-slate-500   dark:text-text-secondary text-sm font-medium uppercase tracking-wider">
                         Total Canciones</p>
                     <span class="material-symbols-outlined text-primary">library_music</span>
                 </div>
                 <div class="flex items-end gap-3">
-                    <p class="text-slate-900 dark:text-white text-3xl font-bold leading-none">342</p>
+                    <p class="text-slate-900 dark:text-white text-3xl font-bold leading-none">{{ $totalCanciones }}</p>
                     <p class="text-emerald-500 text-sm font-bold bg-emerald-500/10 px-2 py-0.5 rounded">+12%</p>
                 </div>
-            </div>
+            </a>
 
             <div
                 class="flex flex-col gap-3 rounded-xl p-5 bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-slate-800 transition-transform hover:-translate-y-1 duration-300">

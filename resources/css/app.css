@@ -38,7 +38,7 @@
     /* Botones sólidos serán azules */
     --color-accent-content: var(--color-zinc-800);
     /* Texto dentro de botones será blanco */
-    --color-accent-foreground: var(--color-primary);
+    --color-accent-foreground: var(--color-background-light);
     /* EL TEXTO DEL MENÚ SERÁ AZUL */
 
 }
@@ -46,7 +46,7 @@
 @layer theme {
     .dark {
         --color-accent: var(--color-blue-500);
-        --color-accent-content: var(--color-white);
+        --color-accent-content: var(--color-background-light);
         --color-accent-foreground: var(--color-zinc-900);
 
         /* Forzamos el fondo oscuro de Stitch cuando esté en modo .dark */

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\DasboardController;
+use App\Livewire\ListarCanciones;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -15,9 +17,13 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 // admin dashboard
-Route::view('admin', 'admin')
+Route::get('admin', [DasboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'admin'])
     ->name('admin');
+
+Route::get('admin/canciones', ListarCanciones::class)
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('admin.canciones');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
