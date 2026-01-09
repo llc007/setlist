@@ -23,71 +23,36 @@
             </div>
         </header>
 
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <a href="{{ route('admin.canciones') }}" wire:navigate
-                class="block flex flex-col gap-3 rounded-xl p-5 bg-white dark:bg-card-dark 
-                shadow-sm border border-slate-200 dark:border-slate-800 transition-transform hover:-translate-y-1 duration-300
-                cursor-pointer no-underline">
-                <div class="flex items-center justify-between">
-                    <p class="text-slate-500   dark:text-text-secondary text-sm font-medium uppercase tracking-wider">
-                        Total Canciones</p>
-                    <span class="material-symbols-outlined text-primary">library_music</span>
-                </div>
-                <div class="flex items-end gap-3">
-                    <p class="text-slate-900 dark:text-white text-3xl font-bold leading-none">{{ $totalCanciones }}</p>
-                    <p class="text-emerald-500 text-sm font-bold bg-emerald-500/10 px-2 py-0.5 rounded">+12%</p>
-                </div>
-            </a>
 
-            <div
-                class="flex flex-col gap-3 rounded-xl p-5 bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-slate-800 transition-transform hover:-translate-y-1 duration-300">
-                <div class="flex items-center justify-between">
-                    <p class="text-slate-500 dark:text-text-secondary text-sm font-medium uppercase tracking-wider">
-                        Miembros Activos</p>
-                    <span class="material-symbols-outlined text-primary">groups</span>
-                </div>
-                <div class="flex items-end gap-3">
-                    <p class="text-slate-900 dark:text-white text-3xl font-bold leading-none">45</p>
-                    <p class="text-emerald-500 text-sm font-bold bg-emerald-500/10 px-2 py-0.5 rounded">+2%</p>
-                </div>
-            </div>
+        <livewire:admin.stats-overview />
+        <h3 class="text-slate-900 dark:text-white text-lg font-bold mb-4">Acciones Rápidas</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <button
+                class="flex items-center justify-center gap-3 p-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition-all shadow-lg shadow-primary/25 group">
+                <span class="material-symbols-outlined group-hover:scale-110 transition-transform">playlist_add</span>
+                Crear Setlist
+            </button>
 
-            <div
-                class="flex flex-col gap-3 rounded-xl p-5 bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-slate-800 transition-transform hover:-translate-y-1 duration-300">
-                <div class="flex items-center justify-between">
-                    <p class="text-slate-500 dark:text-text-secondary text-sm font-medium uppercase tracking-wider">
-                        Servicios (Mes)</p>
-                    <span class="material-symbols-outlined text-primary">calendar_month</span>
-                </div>
-                <div class="flex items-end gap-3">
-                    <p class="text-slate-900 dark:text-white text-3xl font-bold leading-none">8</p>
-                    <p class="text-slate-400 text-sm font-medium">En camino</p>
-                </div>
-            </div>
-        </section>
-
-        <section>
-            <h3 class="text-slate-900 dark:text-white text-lg font-bold mb-4">Acciones Rápidas</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <button
-                    class="flex items-center justify-center gap-3 p-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-semibold transition-all shadow-lg shadow-primary/25 group">
-                    <span
-                        class="material-symbols-outlined group-hover:scale-110 transition-transform">playlist_add</span>
-                    Crear Setlist
-                </button>
+            <flux:modal.trigger name="nueva-cancion">
                 <button
                     class="flex items-center justify-center gap-3 p-4 rounded-xl bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-card-dark-hover border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium transition-all group">
                     <span
                         class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">add_circle</span>
                     Añadir Canción
                 </button>
-                <button
-                    class="flex items-center justify-center gap-3 p-4 rounded-xl bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-card-dark-hover border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium transition-all group">
-                    <span
-                        class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">mail</span>
-                    Mensaje al Coro
-                </button>
-            </div>
+            </flux:modal.trigger>
+
+            <button
+                class="flex items-center justify-center gap-3 p-4 rounded-xl bg-white dark:bg-card-dark hover:bg-slate-50 dark:hover:bg-card-dark-hover border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium transition-all group">
+                <span
+                    class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">mail</span>
+                Mensaje al Coro
+            </button>
+
+            <livewire:crear-cancion />
+
+
+        </div>
         </section>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -95,7 +60,8 @@
                 <section class="flex flex-col gap-4">
                     <div class="flex items-center justify-between">
                         <h3 class="text-slate-900 dark:text-white text-lg font-bold">Próximos Servicios</h3>
-                        <a class="text-primary text-sm font-medium hover:underline" href="#">Ver Calendario</a>
+                        <a class="text-primary text-sm font-medium hover:underline" href="#">Ver
+                            Calendario</a>
                     </div>
 
                     <div
@@ -158,7 +124,8 @@
                 <section>
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-slate-900 dark:text-white text-lg font-bold">Canciones Recientes</h3>
-                        <a class="text-primary text-sm font-medium hover:underline" href="#">Ver Biblioteca</a>
+                        <a class="text-primary text-sm font-medium hover:underline" href="#">Ver
+                            Biblioteca</a>
                     </div>
                     <div
                         class="bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
@@ -227,8 +194,10 @@
                                 <span class="material-symbols-outlined text-amber-500 text-xl">person_add</span>
                             </div>
                             <div class="flex flex-col gap-1">
-                                <p class="text-slate-900 dark:text-white text-sm font-medium">Solicitud de Acceso</p>
-                                <p class="text-slate-500 text-sm leading-snug">3 miembros del coro solicitaron acceso
+                                <p class="text-slate-900 dark:text-white text-sm font-medium">Solicitud de Acceso
+                                </p>
+                                <p class="text-slate-500 text-sm leading-snug">3 miembros del coro solicitaron
+                                    acceso
                                     al portal.</p>
                                 <div class="flex gap-3 mt-1">
                                     <button class="text-primary text-xs font-semibold hover:underline">Revisar</button>
@@ -243,7 +212,8 @@
                                 <span class="material-symbols-outlined text-blue-500 text-xl">schedule</span>
                             </div>
                             <div class="flex flex-col gap-1">
-                                <p class="text-slate-900 dark:text-white text-sm font-medium">Actualización de Horario
+                                <p class="text-slate-900 dark:text-white text-sm font-medium">Actualización de
+                                    Horario
                                 </p>
                                 <p class="text-slate-500 text-sm leading-snug">Ensayo del 1 de Nov cambiado a las
                                     19:00.</p>
@@ -256,7 +226,8 @@
                             </div>
                             <div class="flex flex-col gap-1">
                                 <p class="text-slate-900 dark:text-white text-sm font-medium">Lista Aprobada</p>
-                                <p class="text-slate-500 text-sm leading-snug">El Pastor Marcos aprobó la lista del 24
+                                <p class="text-slate-500 text-sm leading-snug">El Pastor Marcos aprobó la lista del
+                                    24
                                     de Oct.</p>
                                 <span class="text-slate-600 dark:text-slate-500 text-xs">hace 2 horas</span>
                             </div>

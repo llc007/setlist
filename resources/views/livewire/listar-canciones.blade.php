@@ -1,12 +1,28 @@
 <div>
-    <div class="flex items-center justify-between mb-6">
-        <flux:heading size="xl">Biblioteca de Canciones</flux:heading>
+    <div>
+        <div class="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+            <flux:heading size="xl" class="flex-1">Biblioteca</flux:heading>
 
-        <div class="w-1/3">
-            <flux:input wire:model.live.debounce.300ms="buscar" icon="magnifying-glass"
-                placeholder="Buscar por título o artista..." />
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <flux:select wire:model.live="categoria_id" placeholder="Todas las categorías" class="sm:w-48">
+                    <flux:select.option value="">Todas las categorías</flux:select.option>
+                    @foreach ($categorias as $cat)
+                        <flux:select.option value="{{ $cat->id }}">{{ $cat->nombre }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                <flux:input wire:model.live.debounce.300ms="buscar" icon="magnifying-glass"
+                    placeholder="Buscar canción..." class="flex-1 sm:w-64" />
+
+                @if ($buscar || $categoria_id)
+                    <flux:button variant="ghost" size="sm" wire:click="limpiarFiltros" icon="x-mark">
+                        Limpiar
+                    </flux:button>
+                @endif
+            </div>
         </div>
     </div>
+
 
     <div class="overflow-hidden border border-zinc-200 dark:border-zinc-700 rounded-lg">
         <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
