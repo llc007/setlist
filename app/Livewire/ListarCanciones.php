@@ -7,6 +7,7 @@ use App\Models\Categoria;
 // Importante
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\On;
 
 class ListarCanciones extends Component
 {
@@ -36,6 +37,8 @@ class ListarCanciones extends Component
         $this->resetPage();
     }
 
+    // Este atributo hace que el componente se refresque solo
+    #[On('cancion-actualizada')]
     public function render()
     {
         $canciones = Cancion::query()
@@ -49,8 +52,8 @@ class ListarCanciones extends Component
             // 2. Filtro por Texto (dentro de los resultados anteriores)
             ->when($this->buscar, function ($query) {
                 $query->where(function ($q) { // Agrupamos para que el OR no anule la categoría
-                    $q->where('titulo', 'like', '%'.$this->buscar.'%')
-                        ->orWhere('artista', 'like', '%'.$this->buscar.'%');
+                    $q->where('titulo', 'like', '%' . $this->buscar . '%')
+                        ->orWhere('artista', 'like', '%' . $this->buscar . '%');
                 });
             })
             ->latest()

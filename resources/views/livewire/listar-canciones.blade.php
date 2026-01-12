@@ -35,6 +35,8 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Tono</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Recursos
                     </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">Acciones
+                    </th>
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
@@ -66,11 +68,21 @@
                                 @endforeach
                             </div>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex gap-3">
+                                <flux:button.group>
+                                    <flux:button class="cursor-pointer" tooltip="Añadir Recurso" tooltip:position="bottom" variant="ghost" size="xs" icon="plus"
+                                    wire:click="$dispatch('abrir-modal-recursos', { id: {{ $cancion->id }} })" />
+                                    <flux:button class="cursor-pointer" variant="ghost" size="xs" icon="pencil" />
+                                    <flux:button class="cursor-pointer" variant="ghost" size="xs" icon="trash" />
+                                </flux:button.group>
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="4" class="px-6 py-10 text-center text-zinc-500">
-                            No se encontraron canciones con "{{ $buscar }}"
+                            No se encontraron canciones {{ $buscar ? 'con "' . $buscar . '"' : '...' }}
                         </td>
                     </tr>
                 @endforelse
@@ -81,4 +93,5 @@
     <div class="mt-4">
         {{ $canciones->links() }}
     </div>
+    <livewire:gestionar-recursos />
 </div>
