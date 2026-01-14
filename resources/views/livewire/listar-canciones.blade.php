@@ -73,8 +73,20 @@
                                 <flux:button.group>
                                     <flux:button class="cursor-pointer" tooltip="Añadir Recurso" tooltip:position="bottom" variant="ghost" size="xs" icon="plus"
                                     wire:click="$dispatch('abrir-modal-recursos', { id: {{ $cancion->id }} })" />
-                                    <flux:button class="cursor-pointer" variant="ghost" size="xs" icon="pencil" />
-                                    <flux:button class="cursor-pointer" variant="ghost" size="xs" icon="trash" />
+                                    <flux:button 
+                                        variant="ghost" 
+                                        size="xs" 
+                                        icon="pencil" 
+                                        class="cursor-pointer"
+                                        wire:click="$dispatch('abrir-modal-edicion', { id: {{ $cancion->id }} })" 
+                                    />
+                                    <flux:button 
+                                        variant="ghost" 
+                                        size="xs" 
+                                        icon="trash" 
+                                        class="cursor-pointer hover:text-red-500" {{-- Un toque rojo al hover --}}
+                                        wire:click="confirmarEliminacion({{ $cancion->id }}, '{{ addslashes($cancion->titulo) }}')" 
+                                    />
                                 </flux:button.group>
                             </div>
                         </td>
@@ -94,4 +106,28 @@
         {{ $canciones->links() }}
     </div>
     <livewire:gestionar-recursos />
+    <livewire:editar-cancion />
+
+    <flux:modal name="confirmar-eliminacion" class="md:w-[400px]">
+    <div class="space-y-6">
+        <div>
+            <flux:heading size="lg">¿Eliminar canción?</flux:heading>
+            <flux:subheading>
+                Estás a punto de eliminar **{{ $tituloCancionSiendoEliminada }}**. 
+                Esta acción no se puede deshacer.
+            </flux:subheading>
+        </div>
+
+        <div class="flex gap-2">
+            <flux:spacer />
+            <flux:modal.close>
+                <flux:button variant="ghost">Cancelar</flux:button>
+            </flux:modal.close>
+            
+            <flux:button wire:click="eliminar" variant="danger">
+                Sí, eliminar
+            </flux:button>
+        </div>
+    </div>
+</flux:modal>
 </div>

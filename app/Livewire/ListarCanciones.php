@@ -16,6 +16,8 @@ class ListarCanciones extends Component
     public $buscar = '';
 
     public $categoria_id = '';
+    public $cancionIdSiendoEliminada;
+    public $tituloCancionSiendoEliminada;
 
     // Esto limpia la paginación cuando escribes en el buscador
     public function updatingBuscar()
@@ -63,5 +65,28 @@ class ListarCanciones extends Component
             'canciones' => $canciones,
             'categorias' => Categoria::orderBy('nombre')->get(), // Pasamos las categorías al select
         ]);
+    }
+
+    public function confirmarEliminacion($id, $titulo)
+    {
+        $this->cancionIdSiendoEliminada = $id;
+        $this->tituloCancionSiendoEliminada = $titulo;
+
+        // Abrimos el modal de confirmación
+        $this->dispatch('modal-show', name: 'confirmar-eliminacion');
+    }
+
+    public function eliminar()
+    {
+        $cancion = Cancion::findOrFail($this->cancionIdSiendoEliminada);
+        $cancion->delete();
+
+        $this->dispatch('modal-close', name: 'confirmar-eliminacion');
+
+        // Notificamos a las estadísticas para que el contador baje
+        $this->dispatch('cancion-creada');
+
+        // Opcional: un mensaje de éxito (Flux tiene toasts, pero mantengámoslo simple)
+        $this->reset(['cancionIdSiendoEliminada', 'tituloCancionSiendoEliminada']);
     }
 }
