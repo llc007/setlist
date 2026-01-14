@@ -63,8 +63,8 @@ class ListarCanciones extends Component
 
         return view('livewire.listar-canciones', [
             'canciones' => $canciones,
-            'categorias' => Categoria::orderBy('nombre')->get(), // Pasamos las categorías al select
-        ]);
+            'categorias' => Categoria::orderBy('nombre')->get(),
+        ]); // <--- Forzamos la ruta con puntos, no con ::
     }
 
     public function confirmarEliminacion($id, $titulo)
