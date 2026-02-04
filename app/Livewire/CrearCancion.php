@@ -12,8 +12,6 @@ class CrearCancion extends Component
     #[Rule('required|min:3', as: 'titulo')]
     public $titulo = '';
 
-    #[Rule('nullable|min:3', as: 'artista')]
-    public $artista = '';
 
     #[Rule('nullable', as: 'tono_original')]
     public $tono_original = '';
@@ -24,16 +22,35 @@ class CrearCancion extends Component
     #[Rule('nullable', as: 'letra')]
     public $letra = '';
 
+    #[Rule('nullable', as: 'numero')]
+    public $numero = '';
+
+
+
     public function guardar()
     {
         $this->validate();
 
+        $codigoFinal = null;
+
+        // 2. Lógica para armar el código si es Himnario
+        // Primero buscamos el nombre de la categoría seleccionada
+        $categoria = Categoria::find($this->categoria_id);
+
+        if ($categoria && strtolower($categoria->nombre) === 'himnario' && $this->numero) {
+            /**
+             * str_pad toma el número (ej: 5) y lo rellena con "0" 
+             * hasta tener 3 caracteres, resultando en "005".
+             */
+            $numeroFormateado = str_pad($this->numero, 3, '0', STR_PAD_LEFT);
+            $codigoFinal = 'H' . $numeroFormateado;
+        }
+
         Cancion::create([
             'titulo' => $this->titulo,
-            'artista' => $this->artista,
             'tono_original' => $this->tono_original,
             'categoria_id' => $this->categoria_id,
-            'letra' => $this->letra,
+            'codigo' => $codigoFinal,
         ]);
         // limpiar los campos
         $this->reset();

@@ -16,6 +16,7 @@ class Cancion extends Model
         'letra',
         'tono_original',
         'categoria_id',
+        'codigo',
     ];
 
     /**

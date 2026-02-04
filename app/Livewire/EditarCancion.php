@@ -9,7 +9,7 @@ use Livewire\Attributes\On;
 
 class EditarCancion extends Component
 {
-    public $cancionId, $titulo, $artista, $categoria_id, $tono_original, $letra;
+    public $cancionId, $titulo, $categoria_id, $tono_original, $codigo;
 
     #[On('abrir-modal-edicion')]
     public function cargarCancion($id)
@@ -17,10 +17,9 @@ class EditarCancion extends Component
         $cancion = Cancion::findOrFail($id);
         $this->cancionId = $cancion->id;
         $this->titulo = $cancion->titulo;
-        $this->artista = $cancion->artista;
         $this->categoria_id = $cancion->categoria_id;
         $this->tono_original = $cancion->tono_original;
-        $this->letra = $cancion->letra;
+        $this->codigo = $cancion->codigo;
 
         $this->dispatch('modal-show', name: 'editar-cancion');
     }
@@ -35,10 +34,9 @@ class EditarCancion extends Component
         $cancion = Cancion::findOrFail($this->cancionId);
         $cancion->update([
             'titulo' => $this->titulo,
-            'artista' => $this->artista,
             'categoria_id' => $this->categoria_id,
             'tono_original' => $this->tono_original,
-            'letra' => $this->letra,
+            'codigo' => $this->codigo,
         ]);
 
         $this->dispatch('modal-close', name: 'editar-cancion');
