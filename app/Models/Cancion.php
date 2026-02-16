@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Cancion extends Model
 {
+    use HasFactory;
+
     protected $table = 'canciones';
 
     protected $fillable = [
@@ -17,6 +20,7 @@ class Cancion extends Model
         'tono_original',
         'categoria_id',
         'codigo',
+        'pdf_path',
     ];
 
     /**

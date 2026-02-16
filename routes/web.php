@@ -27,6 +27,7 @@ Route::get('admin/canciones', ListarCanciones::class)
 
 //Ruta para revisar el repertorio publico    
 Route::livewire('/repertorio', 'repertorio-publico')->name('repertorio');
+Route::livewire('/repertorio/{cancion}', 'ver-cancion')->name('ver-cancion');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
