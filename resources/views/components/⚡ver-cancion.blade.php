@@ -9,11 +9,20 @@ new class extends Component {
     // Variables para futura lógica de transposición (visual por ahora)
     public $transposicion = 0;
     public $tonoActual;
+    public $letra; // Propiedad para el editor de letra
 
     public function mount(Cancion $cancion)
     {
         $this->cancion = $cancion->load('recursos', 'categoria');
         $this->tonoActual = $cancion->tono_original ?? 'C';
+        $this->letra = $cancion->letra;
+    }
+
+    public function guardarLetra()
+    {
+        $this->cancion->update(['letra' => $this->letra]);
+        $this->dispatch('modal-close', name: 'modal-interactivo');
+        // Opcional: Notificar éxito
     }
 
     // Aquí iría la lógica para subir/bajar tono más adelante
@@ -52,6 +61,71 @@ new class extends Component {
         }
         return $url;
     }
+
+    public function renderLetraConAcordes($texto)
+    {
+        if (!$texto)
+            return '';
+
+        // Escapar HTML por seguridad
+        $texto = htmlspecialchars($texto);
+        $lineas = explode("\n", $texto);
+        $html = '<div class="space-y-3 font-sans">';
+
+        foreach ($lineas as $linea) {
+            $linea = trim($linea);
+
+            if (empty($linea)) {
+                $html .= '<div class="h-4"></div>'; // Salto de línea visual
+                continue;
+            }
+
+            // Detectar automáticamente cabeceras de secciones
+            if (preg_match('/^(Intro|Coro|Verso|Puente|Bridge|Chorus|Pre-Coro|Outro|Final)/i', $linea)) {
+                $html .= '<div class="font-black text-primary text-lg mt-6 mb-1">' . $linea . '</div>';
+                continue;
+            }
+
+            // Contenedor de la línea con flex-wrap para que se adapte a móviles
+            $html .= '<div class="flex flex-wrap items-end">';
+
+            // Separar la línea usando los corchetes como delimitadores
+            $partes = preg_split('/(\[[^\]]+\])/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
+            $acordeActual = '';
+
+            foreach ($partes as $parte) {
+                if (preg_match('/\[([^\]]+)\]/', $parte, $coincidencias)) {
+                    // Es un acorde, lo guardamos para la siguiente palabra
+                    $acordeActual = $coincidencias[1];
+                } else {
+                    // Es letra: la dividimos por espacios para asegurar un buen "wrap" en móviles
+                    $palabras = explode(' ', $parte);
+
+                    foreach ($palabras as $index => $palabra) {
+                        // Respetar el espacio entre palabras
+                        $espacio = ($index < count($palabras) - 1) ? '&nbsp;' : '';
+                        $html
+                            .= '<div class="inline-flex flex-col justify-end text-left">'; // Solo la primera palabra de este bloque
+                        //lleva el acorde 
+                        $acordeAMostrar = ($index === 0) ? $acordeActual : ''; // Acorde (Fila superior) 
+                        $html .= '<span class="font-bold text-primary text-sm h-5 leading-none">' . $acordeAMostrar . '</span>'; // Letra
+                        // (Fila inferior) 
+                        $html .= '<span class="text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-tight">'
+                            . $palabra . $espacio . '</span>';
+                        $html .= '</div>';
+                    }
+                    $acordeActual = ''; // Limpiamos el acorde después
+                    //de usarlo 
+                }
+            }
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+        return $html;
+    }
+
+
+
 }; ?>
 
 <div>
@@ -87,7 +161,7 @@ new class extends Component {
     <div class="flex flex-wrap justify-between items-end gap-6 pb-6 border-b border-gray-200 dark:border-[#283039]">
         <div class="flex flex-col gap-2">
             <h1 class="text-slate-900 dark:text-white text-3xl md:text-4xl font-black tracking-tight">
-                {{$cancion->codigo." - ".$cancion->titulo }}
+                {{$cancion->codigo . " - " . $cancion->titulo }}
             </h1>
             <div class="flex items-center gap-2 text-slate-500 dark:text-[#9dabb9]">
                 <span class="material-symbols-outlined text-[20px]">mic</span>
@@ -175,7 +249,7 @@ new class extends Component {
                     <div class="p-6 md:p-8 overflow-y-auto max-h-[800px]">
                         <div
                             class="font-mono text-base md:text-lg leading-loose text-slate-700 dark:text-white/90 whitespace-pre-wrap">
-                            {{ $cancion->letra }}
+                            {!! $this->renderLetraConAcordes($cancion->letra) !!}
                         </div>
                     </div>
                 @endif
@@ -224,8 +298,21 @@ new class extends Component {
                 <div
                     class="px-4 py-3 border-b border-gray-200 dark:border-[#283039] flex justify-between items-center bg-gray-50 dark:bg-[#1c2128]">
                     <h3 class="text-slate-900 dark:text-white font-bold text-sm">Archivos y Partituras</h3>
-                    <button class="text-primary text-xs font-bold hover:underline" type="button">Ver
-                        Todo</button>
+
+                    <flux:dropdown>
+                        <flux:button size="sm" icon="plus" variant="ghost">Agregar</flux:button>
+
+                        <flux:menu>
+                            <flux:menu.item icon="document-text"
+                                wire:click="$dispatch('modal-show', { name: 'modal-interactivo' })">
+                                Interactivo
+                            </flux:menu.item>
+                            <flux:menu.item icon="folder-open"
+                                wire:click="$dispatch('modal-show', { name: 'modal-recurso' })">
+                                Recurso
+                            </flux:menu.item>
+                        </flux:menu>
+                    </flux:dropdown>
                 </div>
                 <div class="flex flex-col">
                     @forelse($cancion->recursos as $recurso)
@@ -288,4 +375,39 @@ new class extends Component {
     </div>
 
     <livewire:editar-cancion />
+
+    <flux:modal name="modal-interactivo" class="md:w-[600px] space-y-6">
+        <div class="space-y-2">
+            <flux:heading size="lg">Editor Interactivo</flux:heading>
+            <flux:subheading>Escribe la letra y añade acordes entre corchetes, ej: [C] Letra</flux:subheading>
+        </div>
+
+        <flux:textarea wire:model="letra" label="Letra con Acordes" rows="15"
+            placeholder="[C] Amazing grace [F] how sweet the sound..." />
+
+        <div class="flex gap-2">
+            <flux:spacer />
+            <flux:modal.close>
+                <flux:button variant="ghost">Cancelar</flux:button>
+            </flux:modal.close>
+            <flux:button wire:click="guardarLetra" variant="primary">Guardar</flux:button>
+        </div>
+    </flux:modal>
+
+    <!-- Placeholder for Recurso modal if needed later, or handle file upload logic separately -->
+    <flux:modal name="modal-recurso" class="md:w-[500px] space-y-6">
+        <div class="space-y-2">
+            <flux:heading size="lg">Subir Recurso</flux:heading>
+            <flux:subheading>Sube un PDF, Audio o Imagen.</flux:subheading>
+        </div>
+        <div class="p-4 text-center text-gray-500">
+            Funcionalidad de subida de archivos pendiente.
+        </div>
+        <div class="flex gap-2">
+            <flux:spacer />
+            <flux:modal.close>
+                <flux:button variant="ghost">Cerrar</flux:button>
+            </flux:modal.close>
+        </div>
+    </flux:modal>
 </div>

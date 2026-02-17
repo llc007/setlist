@@ -25,9 +25,8 @@ Route::get('admin/canciones', ListarCanciones::class)
     ->middleware(['auth', 'verified', 'admin'])
     ->name('admin.canciones');
 
-//Ruta para revisar el repertorio publico    
-Route::livewire('/repertorio', 'repertorio-publico')->name('repertorio');
-Route::livewire('/repertorio/{cancion}', 'ver-cancion')->name('ver-cancion');
+
+
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
@@ -35,6 +34,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/profile', Profile::class)->name('profile.edit');
     Route::get('settings/password', Password::class)->name('user-password.edit');
     Route::get('settings/appearance', Appearance::class)->name('appearance.edit');
+    Route::livewire('/repertorio/{cancion}', 'ver-cancion')->name('ver-cancion');
+
+    //Ruta para revisar el repertorio publico    
+    Route::livewire('/repertorio', 'repertorio-publico')->name('repertorio');
 
     Route::get('settings/two-factor', TwoFactor::class)
         ->middleware(

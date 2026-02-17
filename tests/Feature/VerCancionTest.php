@@ -3,6 +3,7 @@
 use App\Models\Cancion;
 use App\Models\Categoria;
 use App\Models\User;
+use Livewire\Livewire;
 use function Pest\Laravel\actingAs;
 
 it('displays song details and lyrics when no pdf is present', function () {
@@ -64,4 +65,26 @@ it('displays pdf viewer from resources when pdf_path is null', function () {
         ->assertSeeLivewire('ver-cancion')
         ->assertSee('iframe')
         ->assertSee('https://drive.google.com/file/d/12345/preview'); // Verify transformation
+});
+
+it('can update lyrics via interactive editor', function () {
+    $user = User::factory()->create();
+    $categoria = Categoria::factory()->create();
+    $cancion = Cancion::factory()->create([
+        'categoria_id' => $categoria->id,
+        'titulo' => 'Lyrics Song',
+        'letra' => 'Old Lyrics',
+        'pdf_path' => null,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('ver-cancion', ['cancion' => $cancion])
+        ->set('letra', 'New [C] Lyrics')
+        ->call('guardarLetra')
+        ->assertDispatched('modal-close');
+
+    \Pest\Laravel\assertDatabaseHas('canciones', [
+        'id' => $cancion->id,
+        'letra' => 'New [C] Lyrics',
+    ]);
 });
