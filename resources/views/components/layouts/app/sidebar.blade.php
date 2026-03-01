@@ -23,24 +23,22 @@
         <flux:sidebar.nav>
             <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
                 wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
-            <flux:sidebar.item icon="home" :href="route('admin')" :current="request()->routeIs('admin')"
-                wire:navigate>{{ __('Admin') }}</flux:sidebar.item>
+            <flux:sidebar.item icon="home" :href="route('admin')" :current="request()->routeIs('admin')" wire:navigate>
+                {{ __('Admin') }}
+            </flux:sidebar.item>
         </flux:sidebar.nav>
 
         <flux:sidebar.spacer />
 
         <flux:sidebar.nav>
-            <flux:sidebar.item x-show="$flux.appearance === 'dark'" icon="sun"
-                x-on:click="$flux.appearance = 'light'" class="cursor-pointer">{{ __('Modo Claro') }}
+            <flux:sidebar.item x-show="$flux.appearance === 'dark'" icon="sun" x-on:click="$flux.appearance = 'light'"
+                class="cursor-pointer">{{ __('Modo Claro') }}
             </flux:sidebar.item>
-            <flux:sidebar.item x-show="$flux.appearance !== 'dark'" icon="moon"
-                x-on:click="$flux.appearance = 'dark'" class="cursor-pointer">{{ __('Modo Oscuro') }}
+            <flux:sidebar.item x-show="$flux.appearance !== 'dark'" icon="moon" x-on:click="$flux.appearance = 'dark'"
+                class="cursor-pointer">{{ __('Modo Oscuro') }}
             </flux:sidebar.item>
 
-            <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit"
-                target="_blank">{{ __('Repository') }}</flux:sidebar.item>
-            <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire"
-                target="_blank">{{ __('Documentation') }}</flux:sidebar.item>
+
         </flux:sidebar.nav>
 
         <flux:dropdown position="top" align="start" class="max-lg:hidden">

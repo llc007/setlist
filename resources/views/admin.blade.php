@@ -3,8 +3,9 @@
     <div class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 lg:p-12 flex flex-col gap-8">
         <header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div class="flex flex-col gap-1">
-                <h2 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">Bienvenida,
-                    Sara</h2>
+                <h2 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">Bienvenid@,
+                    {{ Auth::user()->name }}
+                </h2>
                 <p class="text-slate-500 dark:text-text-secondary text-base font-normal">Resumen para este domingo, 24
                     de
                     Oct</p>
@@ -235,8 +236,7 @@
                     </div>
                 </div>
 
-                <div
-                    class="bg-gradient-to-br from-primary/20 to-purple-500/10 rounded-xl p-5 border border-primary/10">
+                <div class="bg-gradient-to-br from-primary/20 to-purple-500/10 rounded-xl p-5 border border-primary/10">
                     <div class="flex flex-col gap-3">
                         <div class="flex items-center gap-2 text-primary font-bold">
                             <span class="material-symbols-outlined">lightbulb</span>
