@@ -31,11 +31,13 @@ new class extends Component {
     {
         return [
             'canciones' => Cancion::query()->with('recursos', 'categoria')
-            ->when($this->search, fn($q) => $q->where('titulo', 'like', "%{$this->search}%")
-            ->orWhere('codigo', 'like', "%{$this->search}%")
-            )->when($this->categoria_id, fn($q) => $q->where
-            ('categoria_id', $this->categoria_id))->when($this->tono, fn($q) => 
-            $q->where('tono_original', $this->tono))->orderBy('codigo','asc')->paginate(12),
+                ->when(
+                    $this->search,
+                    fn($q) => $q->where('titulo', 'like', "%{$this->search}%")
+                        ->orWhere('codigo', 'like', "%{$this->search}%")
+                )->when($this->categoria_id, fn($q) => $q->where
+                ('categoria_id', $this->categoria_id))->when($this->tono, fn($q) =>
+                    $q->where('tono_original', $this->tono))->orderBy('codigo', 'asc')->paginate(12),
             'categorias' => Categoria::orderBy('nombre')->get(),
             'tonos' => ['A', 'A#', 'Ab', 'B', 'Bb', 'C', 'C#', 'D', 'D#', 'Db', 'E', 'Eb', 'F', 'F#', 'G', 'G#', 'Gb'],
         ];
@@ -47,19 +49,19 @@ new class extends Component {
         <div>
             <h1 class="text-slate-900 dark:text-white text-4xl md:text-5xl font-black leading-tight tracking-[-0.04em]">
                 Biblioteca de Canciones</h1>
-            <p class="text-slate-500 dark:text-slate-400 mt-2 text-lg">Gestiona el repertorio, letras y arreglos corales.
+            <p class="text-slate-500 dark:text-slate-400 mt-2 text-lg">Gestiona el repertorio, letras y arreglos
+                corales.
             </p>
         </div>
         <flux:modal.trigger name="nueva-cancion">
-        <flux:button variant="primary" icon="plus" class="px-6 py-2.5 shadow-lg shadow-primary/20">Nueva Canción
-        </flux:button>
+            <flux:button variant="primary" icon="plus" class="px-6 py-2.5 shadow-lg shadow-primary/20">Nueva Canción
+            </flux:button>
         </flux:modal.trigger>
     </div>
 
     <div class="w-full mb-6">
         <label class="flex flex-col w-full h-14 relative group">
-            <div
-            x-data @keydown.window.prevent.slash="$refs.searchInput.focus()"
+            <div x-data @keydown.window.prevent.slash="$refs.searchInput.focus()"
                 class="flex w-full flex-1 items-stretch rounded-xl h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus-within:ring-2 ring-primary/20 transition-all shadow-sm">
 
                 <div wire:loading.remove wire:target="search"
@@ -114,18 +116,16 @@ new class extends Component {
                 class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-primary/20 transition-all group">
                 <div class="flex items-center gap-5">
                     <!-- Thumbnail placeholder with gradient -->
-                    <div
-                        
-                        
-                    @if ($cancion->codigo)
+                    <div @if ($cancion->codigo)
                         class="size-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex-shrink-0 flex items-center justify-center text-white font-bold text-md uppercase">
 
                         {{ $cancion->codigo }}
                     @else
-                        class="size-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg uppercase">
+                            class="size-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex-shrink-0 flex
+                            items-center justify-center text-white font-bold text-lg uppercase">
 
-                        {{ Str::limit($cancion->categoria->nombre, 2, '') }}
-                    @endif
+                            {{ Str::limit($cancion->categoria->nombre, 2, '') }}
+                        @endif
                     </div>
 
                     <div class="flex-1 min-w-0">
@@ -147,8 +147,8 @@ new class extends Component {
 
                     <!-- Actions -->
                     <div class="flex items-center gap-1">
-                        <flux:button variant="subtle" size="sm" icon="eye"
-                            class="text-slate-400 hover:text-primary" />
+                        <flux:button variant="subtle" size="sm" icon="eye" wire:navigate
+                            :href="route('ver-cancion', $cancion->id)" class="text-slate-400 hover:text-primary" />
                         <flux:button variant="subtle" size="sm" icon="plus-circle"
                             class="text-slate-400 hover:text-primary" />
                         <flux:button variant="subtle" size="sm" icon="pencil-square"

@@ -9,28 +9,13 @@
             @csrf
 
             <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                :value="old('email')"
-                type="email"
-                required
-                autofocus
-                autocomplete="email"
-                placeholder="email@example.com"
-            />
+            <flux:input name="email" :label="__('Email address')" :value="old('email')" type="email" required autofocus
+                autocomplete="email" placeholder="email@example.com" />
 
             <!-- Password -->
             <div class="relative">
-                <flux:input
-                    name="password"
-                    :label="__('Password')"
-                    type="password"
-                    required
-                    autocomplete="current-password"
-                    :placeholder="__('Password')"
-                    viewable
-                />
+                <flux:input name="password" :label="__('Password')" type="password" required
+                    autocomplete="current-password" :placeholder="__('Password')" viewable />
 
                 @if (Route::has('password.request'))
                     <flux:link class="absolute top-0 text-sm end-0" :href="route('password.request')" wire:navigate>
@@ -47,6 +32,17 @@
                     {{ __('Log in') }}
                 </flux:button>
             </div>
+
+            <div class="flex items-center gap-4 my-2">
+                <div class="h-px bg-gray-200 dark:bg-zinc-700 flex-1"></div>
+                <span class="text-xs text-gray-500 font-medium">O ingresa con</span>
+                <div class="h-px bg-gray-200 dark:bg-zinc-700 flex-1"></div>
+            </div>
+
+            <flux:button variant="outline" class="w-full" icon="globe-alt"
+                href="{{ route('socialite.redirect', 'google') }}">
+                Google
+            </flux:button>
         </form>
 
         @if (Route::has('register'))

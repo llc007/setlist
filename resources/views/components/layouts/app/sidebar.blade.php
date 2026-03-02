@@ -9,7 +9,8 @@
 
     <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
         <flux:sidebar.header>
-            <flux:sidebar.brand :href="route('dashboard')" name="Laravel Starter Kit" wire:navigate>
+            <flux:sidebar.brand :href="route('admin')" :current="request()->routeIs('admin')" name="Laravel Starter Kit"
+                wire:navigate>
                 <div
                     class="flex aspect-square size-8 items-center justify-center rounded-md bg-accent-content text-accent-foreground">
                     <x-app-logo-icon class="size-5 fill-current text-white dark:text-black" />
@@ -21,11 +22,13 @@
         </flux:sidebar.header>
 
         <flux:sidebar.nav>
-            <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                wire:navigate>{{ __('Dashboard') }}</flux:sidebar.item>
+            <!-- Admin -->
             <flux:sidebar.item icon="home" :href="route('admin')" :current="request()->routeIs('admin')" wire:navigate>
-                {{ __('Admin') }}
+                {{ __('Dashboard') }}
             </flux:sidebar.item>
+            <!-- Repertorio -->
+            <flux:sidebar.item icon="musical-note" :href="route('repertorio')"
+                :current="request()->routeIs('repertorio')" wire:navigate>{{ __('Repertorio') }}</flux:sidebar.item>
         </flux:sidebar.nav>
 
         <flux:sidebar.spacer />

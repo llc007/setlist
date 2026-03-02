@@ -9,9 +9,14 @@ use App\Livewire\Settings\TwoFactor;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
+use App\Http\Controllers\Auth\ProviderController;
+
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+Route::get('/auth/{provider}/redirect', [ProviderController::class, 'redirect'])->name('socialite.redirect');
+Route::get('/auth/{provider}/callback', [ProviderController::class, 'callback'])->name('socialite.callback');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])

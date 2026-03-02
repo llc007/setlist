@@ -62,68 +62,92 @@ new class extends Component {
         return $url;
     }
 
+    /**
+     * Traductor de formato [Acorde] a HTML (Versión Mejorada)
+     */
     public function renderLetraConAcordes($texto)
     {
         if (!$texto)
             return '';
 
-        // Escapar HTML por seguridad
         $texto = htmlspecialchars($texto);
         $lineas = explode("\n", $texto);
-        $html = '<div class="space-y-3 font-sans">';
+        $html = '<div class="space-y-4 font-sans">';
 
         foreach ($lineas as $linea) {
             $linea = trim($linea);
 
             if (empty($linea)) {
-                $html .= '<div class="h-4"></div>'; // Salto de línea visual
+                $html .= '<div class="h-4"></div>';
                 continue;
             }
 
-            // Detectar automáticamente cabeceras de secciones
-            if (preg_match('/^(Intro|Coro|Verso|Puente|Bridge|Chorus|Pre-Coro|Outro|Final)/i', $linea)) {
-                $html .= '<div class="font-black text-primary text-lg mt-6 mb-1">' . $linea . '</div>';
+            // Añadí "Instrumental" a las palabras clave detectadas
+            if (preg_match('/^(Intro|Coro|Verso|Puente|Bridge|Chorus|Pre-Coro|Outro|Final|Instrumental)/i', $linea)) {
+                $html .= '<div class="font-black text-red-900 text-lg mt-2 mb-3">' . $linea . '</div>';
                 continue;
             }
 
-            // Contenedor de la línea con flex-wrap para que se adapte a móviles
-            $html .= '<div class="flex flex-wrap items-end">';
+            // Añadí gap-y-4 para que si una línea es muy larga y se va abajo en celulares, no se monte con la de arriba
+            $html .= '<div class="flex flex-wrap items-end gap-y-4">';
 
-            // Separar la línea usando los corchetes como delimitadores
+            // Eliminar espacios que separan un acorde de la siguiente palabra.
+            // Así evitamos que se cree un bloque de espacio en blanco al inicio de la letra.
+            $linea = preg_replace('/\]\s+(?=[^\s\[])/u', ']', $linea);
+
             $partes = preg_split('/(\[[^\]]+\])/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
             $acordeActual = '';
 
             foreach ($partes as $parte) {
                 if (preg_match('/\[([^\]]+)\]/', $parte, $coincidencias)) {
-                    // Es un acorde, lo guardamos para la siguiente palabra
+                    // Si ya teníamos un acorde y viene otro pegado (ej: [Gsus4][G]),
+                    // imprimimos el primero sostenido por un espacio en blanco.
+                    if ($acordeActual !== '') {
+                        $html .= '<div class="inline-flex flex-col justify-end text-left pr-1.5 md:pr-2">';
+                        $html .= '<span class="font-bold text-primary text-sm h-5 leading-none">' . $acordeActual . '</span>';
+                        $html .= '<span class="text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-tight">&nbsp;</span>';
+                        $html .= '</div>';
+                    }
                     $acordeActual = $coincidencias[1];
                 } else {
-                    // Es letra: la dividimos por espacios para asegurar un buen "wrap" en móviles
                     $palabras = explode(' ', $parte);
 
                     foreach ($palabras as $index => $palabra) {
-                        // Respetar el espacio entre palabras
-                        $espacio = ($index < count($palabras) - 1) ? '&nbsp;' : '';
-                        $html
-                            .= '<div class="inline-flex flex-col justify-end text-left">'; // Solo la primera palabra de este bloque
-                        //lleva el acorde 
-                        $acordeAMostrar = ($index === 0) ? $acordeActual : ''; // Acorde (Fila superior) 
-                        $html .= '<span class="font-bold text-primary text-sm h-5 leading-none">' . $acordeAMostrar . '</span>'; // Letra
-                        // (Fila inferior) 
-                        $html .= '<span class="text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-tight">'
-                            . $palabra . $espacio . '</span>';
+                        $acordeAMostrar = ($index === 0) ? $acordeActual : '';
+
+                        // Si no hay ni texto ni acorde, saltamos para no generar basura en el HTML
+                        if ($acordeAMostrar === '' && $palabra === '') {
+                            continue;
+                        }
+
+                        // LA MAGIA: Si hay acorde pero la palabra está vacía, forzamos un espacio en blanco irrompible (&nbsp;)
+                        $textoAMostrar = ($palabra === '') ? '&nbsp;' : $palabra;
+
+                        $espaciado = ($index < count($palabras) - 1) ? ' pr-1.5 md:pr-2' : '';
+
+                        $html .= '<div class="inline-flex flex-col justify-end text-left' . $espaciado . '">';
+                        $html .= '<span class="font-bold text-primary text-sm h-5 leading-none">' . $acordeAMostrar . '</span>';
+                        $html .= '<span class="text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-tight">' . $textoAMostrar . '</span>';
                         $html .= '</div>';
                     }
-                    $acordeActual = ''; // Limpiamos el acorde después
-                    //de usarlo 
+                    $acordeActual = ''; // Limpiamos tras usarlo
                 }
             }
+
+            // Control de seguridad: Si quedó un acorde "colgando" al final de la línea sin texto (ej: "...tu amor [G]")
+            if ($acordeActual !== '') {
+                $html .= '<div class="inline-flex flex-col justify-end text-left">';
+                $html .= '<span class="font-bold text-primary text-sm h-5 leading-none">' . $acordeActual . '</span>';
+                $html .= '<span class="text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-tight">&nbsp;</span>';
+                $html .= '</div>';
+            }
+
             $html .= '</div>';
         }
         $html .= '</div>';
+
         return $html;
     }
-
 
 
 }; ?>
@@ -246,9 +270,9 @@ new class extends Component {
                 @if($this->pdfUrl)
                     <iframe src="{{ $this->pdfUrl }}" class="w-full h-full" frameborder="0"></iframe>
                 @else
-                    <div class="p-6 md:p-8 overflow-y-auto max-h-[800px]">
-                        <div
-                            class="font-mono text-base md:text-lg leading-loose text-slate-700 dark:text-white/90 whitespace-pre-wrap">
+                    <div class="p-6 md:px-8 py-6 md:py-8 overflow-y-auto max-h-[800px]">
+                        <h2 class="text-3xl font-black text-black dark:text-white mb-6">{{ $cancion->titulo }}</h2>
+                        <div class="font-mono text-base md:text-lg leading-loose text-slate-700 dark:text-white/90">
                             {!! $this->renderLetraConAcordes($cancion->letra) !!}
                         </div>
                     </div>

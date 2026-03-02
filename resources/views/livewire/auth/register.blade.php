@@ -9,55 +9,37 @@
             @csrf
 
             <!-- Name -->
-            <flux:input
-                name="name"
-                :label="__('Name')"
-                :value="old('name')"
-                type="text"
-                required
-                autofocus
-                autocomplete="name"
-                :placeholder="__('Full name')"
-            />
+            <flux:input name="name" :label="__('Name')" :value="old('name')" type="text" required autofocus
+                autocomplete="name" :placeholder="__('Full name')" />
 
             <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                :value="old('email')"
-                type="email"
-                required
-                autocomplete="email"
-                placeholder="email@example.com"
-            />
+            <flux:input name="email" :label="__('Email address')" :value="old('email')" type="email" required
+                autocomplete="email" placeholder="email@example.com" />
 
             <!-- Password -->
-            <flux:input
-                name="password"
-                :label="__('Password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Password')"
-                viewable
-            />
+            <flux:input name="password" :label="__('Password')" type="password" required autocomplete="new-password"
+                :placeholder="__('Password')" viewable />
 
             <!-- Confirm Password -->
-            <flux:input
-                name="password_confirmation"
-                :label="__('Confirm password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Confirm password')"
-                viewable
-            />
+            <flux:input name="password_confirmation" :label="__('Confirm password')" type="password" required
+                autocomplete="new-password" :placeholder="__('Confirm password')" viewable />
 
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full">
                     {{ __('Create account') }}
                 </flux:button>
             </div>
+
+            <div class="flex items-center gap-4 my-2">
+                <div class="h-px bg-gray-200 dark:bg-zinc-700 flex-1"></div>
+                <span class="text-xs text-gray-500 font-medium">O regístrate con</span>
+                <div class="h-px bg-gray-200 dark:bg-zinc-700 flex-1"></div>
+            </div>
+
+            <flux:button variant="outline" class="w-full" icon="globe-alt"
+                href="{{ route('socialite.redirect', 'google') }}">
+                Google
+            </flux:button>
         </form>
 
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
