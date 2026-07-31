@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -47,7 +45,7 @@ class ProviderController extends Controller
             return redirect()->intended(route('dashboard'));
 
         } catch (\Exception $e) {
-            return redirect(route('login'))->with('status', 'Hubo un error al iniciar sesión con ' . ucfirst($provider));
+            return redirect(route('login'))->with('status', 'Hubo un error al iniciar sesión con '.ucfirst($provider));
         }
     }
 }

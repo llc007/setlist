@@ -9,7 +9,7 @@
 
     <flux:sidebar sticky collapsible class="bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
         <flux:sidebar.header>
-            <flux:sidebar.brand :href="route('admin')" :current="request()->routeIs('admin')" name="Laravel Starter Kit"
+            <flux:sidebar.brand :href="route('admin')" :current="request()->routeIs('admin')" name="Setlist"
                 wire:navigate>
                 <div
                     class="flex aspect-square size-8 items-center justify-center rounded-md bg-accent-content text-accent-foreground">
@@ -22,13 +22,53 @@
         </flux:sidebar.header>
 
         <flux:sidebar.nav>
-            <!-- Admin -->
+            <!-- Dashboard -->
             <flux:sidebar.item icon="home" :href="route('admin')" :current="request()->routeIs('admin')" wire:navigate>
                 {{ __('Dashboard') }}
             </flux:sidebar.item>
-            <!-- Repertorio -->
+
+            <!-- Repertorio Público Global -->
             <flux:sidebar.item icon="musical-note" :href="route('repertorio')"
-                :current="request()->routeIs('repertorio')" wire:navigate>{{ __('Repertorio') }}</flux:sidebar.item>
+                :current="request()->routeIs('repertorio')" wire:navigate>{{ __('Repertorio Público') }}</flux:sidebar.item>
+
+            <!-- Bandas y Setlists -->
+            @php
+                $userBandas = auth()->user()->hasRole('SuperAdministrador')
+                    ? \App\Models\Banda::all()
+                    : auth()->user()->bandas;
+                $activeBandaId = session('active_banda_id') ?? $userBandas->first()?->id;
+                $activeBanda = $userBandas->firstWhere('id', $activeBandaId);
+            @endphp
+
+            <flux:sidebar.item icon="user-group" :href="route('bandas.index')" :current="request()->routeIs('bandas.index')" wire:navigate>
+                {{ __('Mis Bandas') }}
+            </flux:sidebar.item>
+
+            @if ($activeBanda)
+                <flux:navlist.group heading="{{ $activeBanda->nombre }}" expandable icon="star" :expanded="request()->routeIs('bandas.show') || request()->routeIs('bandas.repertorio.*') || request()->routeIs('bandas.setlists.*') || request()->routeIs('bandas.miembros')">
+                    <flux:navlist.item icon="home" :href="route('bandas.show', $activeBanda->slug)" :current="request()->routeIs('bandas.show')" wire:navigate>
+                        {{ __('Inicio Banda') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="queue-list" :href="route('bandas.setlists.index', $activeBanda->slug)" :current="request()->routeIs('bandas.setlists.*')" wire:navigate>
+                        {{ __('Setlists') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="musical-note" :href="route('bandas.repertorio.index', $activeBanda->slug)" :current="request()->routeIs('bandas.repertorio.*')" wire:navigate>
+                        {{ __('Repertorio Banda') }}
+                    </flux:navlist.item>
+                    <flux:navlist.item icon="users" :href="route('bandas.miembros', $activeBanda->slug)" :current="request()->routeIs('bandas.miembros')" wire:navigate>
+                        {{ __('Miembros') }}
+                    </flux:navlist.item>
+                </flux:navlist.group>
+            @endif
+
+            @can('gestionar-usuarios')
+                <flux:navlist.group heading="Administración" expandable icon="shield-check" :expanded="request()->routeIs('admin.users.*') || request()->routeIs('admin.roles.*')">
+                    <flux:navlist.item icon="users" :href="route('admin.users.index')"
+                        :current="request()->routeIs('admin.users.*')" wire:navigate>{{ __('Usuarios') }}</flux:navlist.item>
+                    <flux:navlist.item icon="key" :href="route('admin.roles.index')"
+                        :current="request()->routeIs('admin.roles.*')" wire:navigate>{{ __('Roles y Permisos') }}</flux:navlist.item>
+                </flux:navlist.group>
+            @endcan
         </flux:sidebar.nav>
 
         <flux:sidebar.spacer />
@@ -131,7 +171,9 @@
         </flux:dropdown>
     </flux:header>
 
-    {{ $slot }}
+    <flux:main>
+        {{ $slot }}
+    </flux:main>
 
     @fluxScripts
 </body>

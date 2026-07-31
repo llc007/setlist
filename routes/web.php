@@ -1,15 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\DasboardController;
-use App\Livewire\ListarCanciones;
-use App\Livewire\Settings\Appearance;
-use App\Livewire\Settings\Password;
-use App\Livewire\Settings\Profile;
-use App\Livewire\Settings\TwoFactor;
+use App\Http\Controllers\Auth\ProviderController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
-
-use App\Http\Controllers\Auth\ProviderController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -21,30 +15,44 @@ Route::get('/auth/{provider}/callback', [ProviderController::class, 'callback'])
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
 // admin dashboard
 Route::get('admin', [DasboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'admin'])
     ->name('admin');
 
-Route::get('admin/canciones', ListarCanciones::class)
+Route::livewire('admin/canciones', 'pages::admin.canciones.index')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('admin.canciones');
 
+Route::livewire('admin/users', 'pages::admin.users.index')
+    ->middleware(['auth', 'verified', 'can:gestionar-usuarios'])
+    ->name('admin.users.index');
 
-
+Route::livewire('admin/roles', 'pages::admin.roles.index')
+    ->middleware(['auth', 'verified', 'can:gestionar-roles'])
+    ->name('admin.roles.index');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
-    Route::get('settings/profile', Profile::class)->name('profile.edit');
-    Route::get('settings/password', Password::class)->name('user-password.edit');
-    Route::get('settings/appearance', Appearance::class)->name('appearance.edit');
-    Route::livewire('/repertorio/{cancion}', 'ver-cancion')->name('ver-cancion');
+    Route::livewire('settings/profile', 'pages::settings.profile')->name('profile.edit');
+    Route::livewire('settings/password', 'pages::settings.password')->name('user-password.edit');
+    Route::livewire('settings/appearance', 'pages::settings.appearance')->name('appearance.edit');
+    Route::livewire('/repertorio/{cancion}', 'pages::repertorio.show')->name('ver-cancion');
 
-    //Ruta para revisar el repertorio publico    
-    Route::livewire('/repertorio', 'repertorio-publico')->name('repertorio');
+    // Ruta para revisar el repertorio publico
+    Route::livewire('/repertorio', 'pages::repertorio.index')->name('repertorio');
 
-    Route::get('settings/two-factor', TwoFactor::class)
+    // Rutas del Módulo de Bandas y Setlists
+    Route::livewire('/bandas', 'pages::bandas.index')->name('bandas.index');
+    Route::livewire('/bandas/{banda:slug}', 'pages::bandas.show')->name('bandas.show');
+    Route::livewire('/bandas/{banda:slug}/repertorio', 'pages::bandas.repertorio.index')->name('bandas.repertorio.index');
+    Route::livewire('/bandas/{banda:slug}/setlists', 'pages::bandas.setlists.index')->name('bandas.setlists.index');
+    Route::livewire('/bandas/{banda:slug}/setlists/{setlist}', 'pages::bandas.setlists.show')->name('bandas.setlists.show');
+    Route::livewire('/bandas/{banda:slug}/miembros', 'pages::bandas.miembros')->name('bandas.miembros');
+
+    Route::livewire('settings/two-factor', 'pages::settings.two-factor')
         ->middleware(
             when(
                 Features::canManageTwoFactorAuthentication()

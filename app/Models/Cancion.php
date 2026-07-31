@@ -19,9 +19,18 @@ class Cancion extends Model
         'letra',
         'tono_original',
         'categoria_id',
+        'banda_id',
+        'es_publica',
         'codigo',
         'pdf_path',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'es_publica' => 'boolean',
+        ];
+    }
 
     /**
      * Una canción puede tener muchos recursos (PDF, YouTube, etc.).
@@ -37,5 +46,22 @@ class Cancion extends Model
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(Categoria::class, 'categoria_id');
+    }
+
+    /**
+     * Banda creadora (si fue subida por una banda específica).
+     */
+    public function banda(): BelongsTo
+    {
+        return $this->belongsTo(Banda::class, 'banda_id');
+    }
+
+    /**
+     * Bandas que tienen esta canción en su repertorio.
+     */
+    public function bandasQueLaTienen(): BelongsToMany
+    {
+        return $this->belongsToMany(Banda::class, 'banda_cancion')
+            ->withTimestamps();
     }
 }

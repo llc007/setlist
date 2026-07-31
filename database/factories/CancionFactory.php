@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Cancion;
+use App\Models\Categoria;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Cancion>
+ * @extends Factory<Cancion>
  */
 class CancionFactory extends Factory
 {
@@ -21,7 +23,7 @@ class CancionFactory extends Factory
             'artista' => $this->faker->name(),
             'letra' => $this->faker->text(),
             'tono_original' => $this->faker->randomElement(['C', 'D', 'E', 'F', 'G', 'A', 'B']),
-            'categoria_id' => \App\Models\Categoria::factory(),
+            'categoria_id' => Categoria::factory(),
             'codigo' => $this->faker->unique()->word(),
             'pdf_path' => null,
         ];

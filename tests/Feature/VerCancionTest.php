@@ -4,6 +4,7 @@ use App\Models\Cancion;
 use App\Models\Categoria;
 use App\Models\User;
 use Livewire\Livewire;
+
 use function Pest\Laravel\actingAs;
 
 it('displays song details and lyrics when no pdf is present', function () {
@@ -19,7 +20,7 @@ it('displays song details and lyrics when no pdf is present', function () {
     actingAs($user)
         ->get(route('ver-cancion', $cancion))
         ->assertOk()
-        ->assertSeeLivewire('ver-cancion')
+        ->assertSeeLivewire('pages::repertorio.show')
         ->assertSee('Amazing Grace')
         ->assertSee('Amazing grace how sweet the sound')
         ->assertDontSee('iframe');
@@ -37,7 +38,7 @@ it('displays pdf viewer when pdf is present', function () {
     actingAs($user)
         ->get(route('ver-cancion', $cancion))
         ->assertOk()
-        ->assertSeeLivewire('ver-cancion')
+        ->assertSeeLivewire('pages::repertorio.show')
         ->assertSee('PDF Song')
         ->assertSee('iframe')
         ->assertSee('songs/score.pdf');
@@ -56,13 +57,13 @@ it('displays pdf viewer from resources when pdf_path is null', function () {
     $cancion->recursos()->create([
         'tipo' => 'pdf',
         'url' => 'https://drive.google.com/file/d/12345/view',
-        'etiqueta' => 'Drive PDF'
+        'etiqueta' => 'Drive PDF',
     ]);
 
     actingAs($user)
         ->get(route('ver-cancion', $cancion))
         ->assertOk()
-        ->assertSeeLivewire('ver-cancion')
+        ->assertSeeLivewire('pages::repertorio.show')
         ->assertSee('iframe')
         ->assertSee('https://drive.google.com/file/d/12345/preview'); // Verify transformation
 });
@@ -78,7 +79,7 @@ it('can update lyrics via interactive editor', function () {
     ]);
 
     Livewire::actingAs($user)
-        ->test('ver-cancion', ['cancion' => $cancion])
+        ->test('pages::repertorio.show', ['cancion' => $cancion])
         ->set('letra', 'New [C] Lyrics')
         ->call('guardarLetra')
         ->assertDispatched('modal-close');

@@ -11,11 +11,19 @@ class IsAdmin
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()?->is_admin) {
+        $user = $request->user();
+
+        if (
+            ! $user
+            || (! $user->hasRole('SuperAdministrador')
+                && ! $user->hasRole('Administrador de Banda')
+                && ! $user->hasRole('admin')
+                && ! $user->is_admin)
+        ) {
             abort(Response::HTTP_FORBIDDEN);
         }
 
