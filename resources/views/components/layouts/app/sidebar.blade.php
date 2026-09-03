@@ -58,15 +58,22 @@
                     <flux:navlist.item icon="users" :href="route('bandas.miembros', $activeBanda->slug)" :current="request()->routeIs('bandas.miembros')" wire:navigate>
                         {{ __('Miembros') }}
                     </flux:navlist.item>
+                    <flux:navlist.item icon="cog-6-tooth" :href="route('bandas.configuracion', $activeBanda->slug)" :current="request()->routeIs('bandas.configuracion')" wire:navigate>
+                        {{ __('Configuración') }}
+                    </flux:navlist.item>
                 </flux:navlist.group>
             @endif
 
             @can('gestionar-usuarios')
-                <flux:navlist.group heading="Administración" expandable icon="shield-check" :expanded="request()->routeIs('admin.users.*') || request()->routeIs('admin.roles.*')">
+                <flux:navlist.group heading="Administración" expandable icon="shield-check" :expanded="request()->routeIs('admin.users.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.categorias.*') || request()->routeIs('admin.bandas.*')">
+                    <flux:navlist.item icon="user-group" :href="route('admin.bandas.index')"
+                        :current="request()->routeIs('admin.bandas.*')" wire:navigate>{{ __('Bandas Globales') }}</flux:navlist.item>
                     <flux:navlist.item icon="users" :href="route('admin.users.index')"
                         :current="request()->routeIs('admin.users.*')" wire:navigate>{{ __('Usuarios') }}</flux:navlist.item>
                     <flux:navlist.item icon="key" :href="route('admin.roles.index')"
                         :current="request()->routeIs('admin.roles.*')" wire:navigate>{{ __('Roles y Permisos') }}</flux:navlist.item>
+                    <flux:navlist.item icon="tag" :href="route('admin.categorias.index')"
+                        :current="request()->routeIs('admin.categorias.*')" wire:navigate>{{ __('Categorías') }}</flux:navlist.item>
                 </flux:navlist.group>
             @endcan
         </flux:sidebar.nav>

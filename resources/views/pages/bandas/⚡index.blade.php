@@ -10,12 +10,14 @@ new #[Layout('components.layouts.app.sidebar')] #[Title('Mis Bandas')] class ext
     public bool $showCreateModal = false;
     public string $nombre = '';
     public string $descripcion = '';
+    public string $tipo_ambito = 'cristiano';
 
     public function openCreateModal(): void
     {
         $this->resetErrorBag();
         $this->nombre = '';
         $this->descripcion = '';
+        $this->tipo_ambito = 'cristiano';
         $this->showCreateModal = true;
     }
 
@@ -24,12 +26,14 @@ new #[Layout('components.layouts.app.sidebar')] #[Title('Mis Bandas')] class ext
         $validated = $this->validate([
             'nombre' => ['required', 'string', 'max:255'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
+            'tipo_ambito' => ['required', 'string', 'in:cristiano,secular,mixto'],
         ]);
 
         $banda = Banda::create([
             'nombre' => $validated['nombre'],
             'slug' => Str::slug($validated['nombre']),
             'descripcion' => $validated['descripcion'] ?? null,
+            'tipo_ambito' => $validated['tipo_ambito'],
         ]);
 
         // Asignar al creador como Administrador de Banda
@@ -169,6 +173,12 @@ new #[Layout('components.layouts.app.sidebar')] #[Title('Mis Bandas')] class ext
                     placeholder="Ej: Grupo de alabanza para reuniones de fin de semana..."
                     rows="3"
                 />
+
+                <flux:select wire:model="tipo_ambito" label="Tipo / Ámbito del Grupo" required>
+                    <flux:select.option value="cristiano">⛪ {{ __('Ministerio / Iglesia / Alabanza (Cristiano)') }}</flux:select.option>
+                    <flux:select.option value="secular">🎸 {{ __('Banda Comercial / Eventos / Bares (General)') }}</flux:select.option>
+                    <flux:select.option value="mixto">🎶 {{ __('Mixto / Versátil (Ambos repertorios)') }}</flux:select.option>
+                </flux:select>
             </div>
 
             <div class="flex items-center justify-end gap-3">

@@ -18,6 +18,7 @@ class Banda extends Model
         'nombre',
         'slug',
         'descripcion',
+        'tipo_ambito',
     ];
 
     protected static function boot(): void

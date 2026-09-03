@@ -12,6 +12,17 @@ new class extends Component {
     public $search = '';
     public $categoria_id = '';
     public $tono = '';
+    public string $ambito = '';
+
+    public function mount()
+    {
+        if (session()->has('active_banda_id')) {
+            $activeBanda = \App\Models\Banda::find(session('active_banda_id'));
+            if ($activeBanda && in_array($activeBanda->tipo_ambito, ['cristiano', 'secular'])) {
+                $this->ambito = $activeBanda->tipo_ambito;
+            }
+        }
+    }
 
     #[On('cancion-creada')]
     public function refreshList()
@@ -23,18 +34,36 @@ new class extends Component {
         $this->resetPage();
     }
 
+    public function updatingAmbito()
+    {
+        $this->resetPage();
+    }
+
     public function with()
     {
+        $activeAmbito = $this->ambito;
+
         return [
-            'canciones' => Cancion::query()->with('recursos', 'categoria')
+            'canciones' => Cancion::query()
+                ->where('es_publica', true)
+                ->with('recursos', 'categoria')
+                ->when($activeAmbito, fn($q) => $q->where('ambito', $activeAmbito))
                 ->when(
                     $this->search,
-                    fn($q) => $q->where('titulo', 'like', "%{$this->search}%")
-                        ->orWhere('codigo', 'like', "%{$this->search}%")
-                )->when($this->categoria_id, fn($q) => $q->where
-                ('categoria_id', $this->categoria_id))->when($this->tono, fn($q) =>
-                    $q->where('tono_original', $this->tono))->orderBy('codigo', 'asc')->paginate(12),
-            'categorias' => Categoria::orderBy('nombre')->get(),
+                    fn($q) => $q->where(function ($sub) {
+                        $sub->where('titulo', 'like', "%{$this->search}%")
+                            ->orWhere('artista', 'like', "%{$this->search}%")
+                            ->orWhere('codigo', 'like', "%{$this->search}%");
+                    })
+                )
+                ->when($this->categoria_id, fn($q) => $q->where('categoria_id', $this->categoria_id))
+                ->when($this->tono, fn($q) => $q->where('tono_original', $this->tono))
+                ->latest()
+                ->paginate(12),
+            'categorias' => Categoria::query()
+                ->when($activeAmbito, fn($q) => $q->whereIn('ambito', [$activeAmbito, 'ambos']))
+                ->orderBy('nombre')
+                ->get(),
             'tonos' => ['A', 'A#', 'Ab', 'B', 'Bb', 'C', 'C#', 'D', 'D#', 'Db', 'E', 'Eb', 'F', 'F#', 'G', 'G#', 'Gb'],
         ];
     }
@@ -81,10 +110,17 @@ new class extends Component {
         </label>
     </div>
 
-    <div class="flex items-center gap-3 mb-6">
+    <div class="flex flex-wrap items-center gap-3 mb-6">
+        <flux:select wire:model.live="ambito" icon="sparkles"
+            class="!bg-white dark:!bg-slate-900 !border-slate-200 dark:!border-slate-800 !rounded-full !px-4">
+            <flux:select.option value="">Ámbito: Todos los catálogos</flux:select.option>
+            <flux:select.option value="cristiano">⛪ Ámbito: Cristiano</flux:select.option>
+            <flux:select.option value="secular">🎸 Ámbito: General / Secular</flux:select.option>
+        </flux:select>
+
         <flux:select wire:model.live="categoria_id" icon="tag" placeholder="Tema: Todos"
             class="!bg-white dark:!bg-slate-900 !border-slate-200 dark:!border-slate-800 !rounded-full !px-4">
-            <flux:select.option value="">Todos las categorías</flux:select.option>
+            <flux:select.option value="">Todas las categorías</flux:select.option>
             @foreach ($categorias as $cat)
                 <flux:select.option value="{{ $cat->id }}">{{ $cat->nombre }}</flux:select.option>
             @endforeach
@@ -117,7 +153,7 @@ new class extends Component {
                     @else
                             class="size-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex-shrink-0 flex
                             items-center justify-center text-white font-bold text-lg uppercase">
-                            {{ Str::limit($cancion->categoria->nombre, 2, '') }}
+                            {{ Str::limit($cancion->categoria?->nombre ?? 'ST', 2, '') }}
                         @endif
                     </div>
 
@@ -126,7 +162,7 @@ new class extends Component {
                             {{ $cancion->titulo }}
                         </h3>
                         <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">
-                            {{ $cancion->categoria->nombre }}
+                            {{ $cancion->categoria?->nombre ?? 'Sin categoría' }}
                         </p>
                     </div>
 

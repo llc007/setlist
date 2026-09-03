@@ -22,6 +22,8 @@ class RoleAndPermissionSeeder extends Seeder
         $gestionarUsuarios = Permission::findOrCreate('gestionar-usuarios');
         $gestionarRoles = Permission::findOrCreate('gestionar-roles');
         $gestionarCanciones = Permission::findOrCreate('gestionar-canciones');
+        $gestionarCategorias = Permission::findOrCreate('gestionar-categorias');
+        $gestionarBandas = Permission::findOrCreate('gestionar-bandas');
         $verRepertorio = Permission::findOrCreate('ver-repertorio');
 
         // Create roles and assign permissions
@@ -30,12 +32,15 @@ class RoleAndPermissionSeeder extends Seeder
             $gestionarUsuarios,
             $gestionarRoles,
             $gestionarCanciones,
+            $gestionarCategorias,
+            $gestionarBandas,
             $verRepertorio,
         ]);
 
         $adminBandaRole = Role::findOrCreate('Administrador de Banda');
         $adminBandaRole->givePermissionTo([
             $gestionarCanciones,
+            $gestionarCategorias,
             $verRepertorio,
         ]);
 

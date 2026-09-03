@@ -21,6 +21,7 @@ class Cancion extends Model
         'categoria_id',
         'banda_id',
         'es_publica',
+        'ambito',
         'codigo',
         'pdf_path',
     ];

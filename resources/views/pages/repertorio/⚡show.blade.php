@@ -10,24 +10,6 @@ new class extends Component {
     public $tonoActual;
     public $letra;
 
-    public function mount(Cancion $cancion)
-    {
-        $this->cancion = $cancion->load('recursos', 'categoria');
-        $this->tonoActual = $cancion->tono_original ?? 'C';
-        $this->letra = $cancion->letra;
-    }
-
-    public function guardarLetra()
-    {
-        $this->cancion->update(['letra' => $this->letra]);
-        $this->dispatch('modal-close', name: 'modal-interactivo');
-    }
-
-    public function cambiarTono($cantidad)
-    {
-        $this->transposicion += $cantidad;
-    }
-
     public function getPdfUrlProperty()
     {
         if ($this->cancion->pdf_path) {
@@ -53,76 +35,204 @@ new class extends Component {
         return $url;
     }
 
+    private array $escalas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    private array $bemoles = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+    public function mount(Cancion $cancion)
+    {
+        $this->cancion = $cancion->load('recursos', 'categoria');
+        $this->tonoActual = $cancion->tono_original ?? 'C';
+        $this->letra = $cancion->letra;
+        $this->actualizarTonoActual();
+    }
+
+    public function guardarLetra()
+    {
+        $this->cancion->update(['letra' => $this->letra]);
+        $this->dispatch('modal-close', name: 'modal-interactivo');
+    }
+
+    public function cambiarTono($cantidad)
+    {
+        $this->transposicion += $cantidad;
+        $this->actualizarTonoActual();
+    }
+
+    private function actualizarTonoActual(): void
+    {
+        $tonoBase = strtoupper(trim($this->cancion->tono_original ?? 'C'));
+        $this->tonoActual = $this->transponerAcorde($tonoBase, $this->transposicion);
+    }
+
+    public function transponerAcorde(string $acorde, int $semitonos): string
+    {
+        if ($semitonos === 0 || empty($acorde)) {
+            return $acorde;
+        }
+
+        return preg_replace_callback('/([A-G][b#]?)(.*)/', function ($match) use ($semitonos) {
+            $nota = $match[1];
+            $resto = $match[2];
+
+            if (str_contains($resto, '/')) {
+                [$sufijo, $bajo] = explode('/', $resto, 2);
+                $notaTrans = $this->shiftNota($nota, $semitonos);
+                $bajoTrans = $this->shiftNota($bajo, $semitonos);
+                return $notaTrans . $sufijo . '/' . $bajoTrans;
+            }
+
+            return $this->shiftNota($nota, $semitonos) . $resto;
+        }, $acorde);
+    }
+
+    private function shiftNota(string $nota, int $semitonos): string
+    {
+        $pos = array_search($nota, $this->escalas);
+        if ($pos === false) {
+            $pos = array_search($nota, $this->bemoles);
+        }
+        if ($pos === false) {
+            return $nota;
+        }
+
+        $nuevaPos = ($pos + $semitonos) % 12;
+        if ($nuevaPos < 0) {
+            $nuevaPos += 12;
+        }
+
+        return $this->escalas[$nuevaPos];
+    }
+
+    public int $tamanioLetra = 16;
+
+    public function cambiarTamanioLetra(int $delta): void
+    {
+        $this->tamanioLetra = max(12, min(28, $this->tamanioLetra + $delta));
+    }
+
+    public function isAcordeToken(string $token): bool
+    {
+        $token = trim($token);
+        if (empty($token) || $token === '//' || $token === '/' || $token === '||' || $token === '|') {
+            return true;
+        }
+
+        return (bool) preg_match('/^[A-G][b#]?(m|maj|min|dim|aug|sus[24]?|add[0-9]+|[0-9]+|b[0-9]+|#[0-9]+|\+|\*|°|ø|-)*(\/[A-G][b#]?)?$/i', $token);
+    }
+
+    public function isLineaDeAcordes(string $linea): bool
+    {
+        $palabras = array_values(array_filter(explode(' ', trim($linea))));
+        if (empty($palabras)) {
+            return false;
+        }
+
+        $coincidencias = 0;
+        foreach ($palabras as $p) {
+            if ($this->isAcordeToken($p)) {
+                $coincidencias++;
+            }
+        }
+
+        return ($coincidencias / count($palabras)) >= 0.7;
+    }
+
     public function renderLetraConAcordes($texto)
     {
-        if (!$texto)
+        if (! $texto) {
             return '';
-
-        $texto = htmlspecialchars($texto);
-        $lineas = explode("\n", $texto);
-        $html = '<div class="space-y-4 font-sans">';
-
-        foreach ($lineas as $linea) {
-            $linea = trim($linea);
-
-            if (empty($linea)) {
-                $html .= '<div class="h-4"></div>';
-                continue;
-            }
-
-            if (preg_match('/^(Intro|Coro|Verso|Puente|Bridge|Chorus|Pre-Coro|Outro|Final|Instrumental)/i', $linea)) {
-                $html .= '<div class="font-black text-red-900 text-lg mt-2 mb-3">' . $linea . '</div>';
-                continue;
-            }
-
-            $html .= '<div class="flex flex-wrap items-end gap-y-4">';
-
-            $linea = preg_replace('/\]\s+(?=[^\s\[])/u', ']', $linea);
-
-            $partes = preg_split('/(\[[^\]]+\])/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
-            $acordeActual = '';
-
-            foreach ($partes as $parte) {
-                if (preg_match('/\[([^\]]+)\]/', $parte, $coincidencias)) {
-                    if ($acordeActual !== '') {
-                        $html .= '<div class="inline-flex flex-col justify-end text-left pr-1.5 md:pr-2">';
-                        $html .= '<span class="font-bold text-primary text-sm h-5 leading-none">' . $acordeActual . '</span>';
-                        $html .= '<span class="text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-tight">&nbsp;</span>';
-                        $html .= '</div>';
-                    }
-                    $acordeActual = $coincidencias[1];
-                } else {
-                    $palabras = explode(' ', $parte);
-
-                    foreach ($palabras as $index => $palabra) {
-                        $acordeAMostrar = ($index === 0) ? $acordeActual : '';
-
-                        if ($acordeAMostrar === '' && $palabra === '') {
-                            continue;
-                        }
-
-                        $textoAMostrar = ($palabra === '') ? '&nbsp;' : $palabra;
-
-                        $espaciado = ($index < count($palabras) - 1) ? ' pr-1.5 md:pr-2' : '';
-
-                        $html .= '<div class="inline-flex flex-col justify-end text-left' . $espaciado . '">';
-                        $html .= '<span class="font-bold text-primary text-sm h-5 leading-none">' . $acordeAMostrar . '</span>';
-                        $html .= '<span class="text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-tight">' . $textoAMostrar . '</span>';
-                        $html .= '</div>';
-                    }
-                    $acordeActual = '';
-                }
-            }
-
-            if ($acordeActual !== '') {
-                $html .= '<div class="inline-flex flex-col justify-end text-left">';
-                $html .= '<span class="font-bold text-primary text-sm h-5 leading-none">' . $acordeActual . '</span>';
-                $html .= '<span class="text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-tight">&nbsp;</span>';
-                $html .= '</div>';
-            }
-
-            $html .= '</div>';
         }
+
+        $lineas = explode("\n", $texto);
+        $style = 'font-size: ' . $this->tamanioLetra . 'px;';
+        $html = '<div style="' . $style . '" class="font-mono leading-relaxed tracking-wide space-y-1">';
+
+        foreach ($lineas as $lineaOriginal) {
+            $linea = rtrim($lineaOriginal);
+
+            if (empty(trim($linea))) {
+                $html .= '<div class="h-3"></div>';
+                continue;
+            }
+
+            // Encabezados de sección tipo [Intro], [Primera Parte], [Coro], etc.
+            if (preg_match('/^\s*(\[[^\]]+\])\s*(.*)$/', $linea, $m)) {
+                $header = htmlspecialchars($m[1]);
+                $resto = trim($m[2]);
+
+                $html .= '<div class="pt-3 pb-1">';
+                $html .= '<span class="font-bold text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm tracking-wider uppercase">' . $header . '</span>';
+
+                if (! empty($resto)) {
+                    $html .= ' ';
+                    $tokens = preg_split('/(\s+)/', $resto, -1, PREG_SPLIT_DELIM_CAPTURE);
+                    foreach ($tokens as $token) {
+                        if (trim($token) === '') {
+                            $html .= $token;
+                        } else {
+                            $acorde = htmlspecialchars($token);
+                            if ($this->transposicion !== 0 && $this->isAcordeToken($acorde)) {
+                                $acorde = $this->transponerAcorde($acorde, $this->transposicion);
+                            }
+                            $html .= '<span class="font-bold text-amber-600 dark:text-amber-400">' . $acorde . '</span>';
+                        }
+                    }
+                }
+
+                $html .= '</div>';
+                continue;
+            }
+
+            // Líneas de solo acordes (estilo Cifra Club sobre la letra)
+            if ($this->isLineaDeAcordes($linea)) {
+                $html .= '<div class="font-bold text-amber-600 dark:text-amber-400 whitespace-pre leading-none pt-2 pb-0.5">';
+
+                $tokens = preg_split('/(\s+)/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
+                foreach ($tokens as $token) {
+                    if (trim($token) === '') {
+                        $html .= $token;
+                    } else {
+                        $acorde = htmlspecialchars($token);
+                        if ($this->transposicion !== 0 && $this->isAcordeToken($acorde)) {
+                            $acorde = $this->transponerAcorde($acorde, $this->transposicion);
+                        }
+                        $html .= '<span>' . $acorde . '</span>';
+                    }
+                }
+
+                $html .= '</div>';
+                continue;
+            }
+
+            // Líneas con corchetes integrados [C] Letra
+            if (str_contains($linea, '[')) {
+                $html .= '<div class="flex flex-wrap items-end gap-y-3 pt-1 pb-1">';
+                $partes = preg_split('/(\[[^\]]+\])/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
+                $acordeActual = '';
+
+                foreach ($partes as $parte) {
+                    if (preg_match('/\[([^\]]+)\]/', $parte, $coincidencias)) {
+                        $acordeActual = htmlspecialchars($coincidencias[1]);
+                        if ($this->transposicion !== 0) {
+                            $acordeActual = $this->transponerAcorde($acordeActual, $this->transposicion);
+                        }
+                    } else {
+                        $textoSegmento = htmlspecialchars($parte);
+                        $html .= '<div class="inline-flex flex-col justify-end text-left pr-1.5">';
+                        $html .= '<span class="font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm h-4 leading-none">' . $acordeActual . '</span>';
+                        $html .= '<span class="text-zinc-900 dark:text-zinc-100 text-sm sm:text-base leading-tight">' . ($textoSegmento !== '' ? $textoSegmento : '&nbsp;') . '</span>';
+                        $html .= '</div>';
+                        $acordeActual = '';
+                    }
+                }
+                $html .= '</div>';
+                continue;
+            }
+
+            // Línea normal de letra
+            $html .= '<div class="text-zinc-900 dark:text-zinc-100 whitespace-pre leading-relaxed py-0.5">' . htmlspecialchars($linea) . '</div>';
+        }
+
         $html .= '</div>';
 
         return $html;
@@ -144,12 +254,12 @@ new class extends Component {
                 <span class="material-symbols-outlined text-[18px]">ios_share</span>
                 <span class="hidden sm:inline">Compartir</span>
             </button>
-            <button
-                class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-white dark:bg-[#283039] border border-gray-200 dark:border-transparent text-slate-700 dark:text-white text-xs font-bold hover:bg-gray-50 dark:hover:bg-[#3b4754] transition-colors shadow-sm"
-                type="button">
+            <a href="{{ route('canciones.imprimir', ['cancion' => $cancion->id, 'semitonos' => $this->transposicion, 'tamanio' => $this->tamanioLetra]) }}"
+                target="_blank"
+                class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-white dark:bg-[#283039] border border-gray-200 dark:border-transparent text-slate-700 dark:text-white text-xs font-bold hover:bg-gray-50 dark:hover:bg-[#3b4754] transition-colors shadow-sm">
                 <span class="material-symbols-outlined text-[18px]">print</span>
-                <span class="hidden sm:inline">Imprimir</span>
-            </button>
+                <span class="hidden sm:inline">Imprimir / PDF</span>
+            </a>
             <button wire:click="$dispatch('abrir-modal-edicion', { id: {{ $cancion->id }} })"
                 class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                 type="button">
@@ -162,19 +272,19 @@ new class extends Component {
     <div class="flex flex-wrap justify-between items-end gap-6 pb-6 border-b border-gray-200 dark:border-[#283039]">
         <div class="flex flex-col gap-2">
             <h1 class="text-slate-900 dark:text-white text-3xl md:text-4xl font-black tracking-tight">
-                {{$cancion->codigo . " - " . $cancion->titulo }}
+                {{ $cancion->codigo ? $cancion->codigo . " - " . $cancion->titulo : $cancion->titulo }}
             </h1>
             <div class="flex items-center gap-2 text-slate-500 dark:text-[#9dabb9]">
                 <span class="material-symbols-outlined text-[20px]">mic</span>
-                <p class="text-lg font-normal">{{ $cancion->artista }}</p>
+                <p class="text-lg font-normal">{{ $cancion->artista ?? 'Desconocido' }}</p>
             </div>
         </div>
-        <button
-            class="flex items-center justify-center gap-2 rounded-lg h-10 px-5 bg-slate-900 dark:bg-white text-white dark:text-black text-sm font-bold hover:bg-slate-800 dark:hover:bg-gray-200 transition-colors shadow-md"
-            type="button">
+        <a href="{{ route('canciones.imprimir', ['cancion' => $cancion->id, 'semitonos' => $this->transposicion, 'tamanio' => $this->tamanioLetra]) }}"
+            target="_blank"
+            class="flex items-center justify-center gap-2 rounded-lg h-10 px-5 bg-slate-900 dark:bg-white text-white dark:text-black text-sm font-bold hover:bg-slate-800 dark:hover:bg-gray-200 transition-colors shadow-md">
             <span class="material-symbols-outlined text-[20px] material-symbols-filled">slideshow</span>
-            <span>Modo Presentación</span>
-        </button>
+            <span>Pantalla Completa / Impresión</span>
+        </a>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
@@ -182,73 +292,83 @@ new class extends Component {
             class="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-[#283039] shadow-sm">
             <p class="text-slate-500 dark:text-[#9dabb9] text-xs font-bold uppercase tracking-wider mb-1">
                 Tonalidad</p>
-            <p class="text-slate-900 dark:text-white text-xl font-bold">{{ $cancion->tono_original }}</p>
+            <p class="text-slate-900 dark:text-white text-xl font-bold">{{ $tonoActual }}</p>
         </div>
         <div
             class="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-[#283039] shadow-sm">
             <p class="text-slate-500 dark:text-[#9dabb9] text-xs font-bold uppercase tracking-wider mb-1">
-                BPM</p>
-            <p class="text-slate-900 dark:text-white text-xl font-bold">72</p>
+                Ámbito</p>
+            <p class="text-slate-900 dark:text-white text-xl font-bold capitalize">{{ $cancion->ambito ?? 'cristiano' }}</p>
         </div>
         <div
             class="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-[#283039] shadow-sm">
             <p class="text-slate-500 dark:text-[#9dabb9] text-xs font-bold uppercase tracking-wider mb-1">
-                Compás</p>
-            <p class="text-slate-900 dark:text-white text-xl font-bold">4/4</p>
+                Categoría</p>
+            <p class="text-slate-900 dark:text-white text-xl font-bold">{{ $cancion->categoria?->nombre ?? 'General' }}</p>
         </div>
         <div
             class="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-[#283039] shadow-sm">
             <p class="text-slate-500 dark:text-[#9dabb9] text-xs font-bold uppercase tracking-wider mb-1">
-                Duración</p>
-            <p class="text-slate-900 dark:text-white text-xl font-bold">4:23</p>
+                Tipo</p>
+            <p class="text-slate-900 dark:text-white text-xl font-bold">{{ $cancion->es_publica ? 'Pública' : 'Privada' }}</p>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[600px] mt-6">
         <div
-            class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white dark:bg-[#1c2128] rounded-xl border border-gray-200 dark:border-[#283039] overflow-hidden shadow-sm">
+            class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white dark:bg-[#18181b] rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm dark:shadow-2xl">
             <div
-                class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#283039] bg-white/50 dark:bg-[#1c2128]/50 backdrop-blur-sm sticky top-0 z-10">
-                <h3 class="text-slate-900 dark:text-white font-bold text-lg">Letra y Acordes</h3>
+                class="flex flex-wrap items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-[#18181b]/90 backdrop-blur-sm sticky top-0 z-10 gap-3">
+                <h3 class="text-zinc-900 dark:text-zinc-100 font-bold text-lg flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-600 dark:text-amber-500">music_note</span>
+                    Letra y Acordes (Estilo Cifra)
+                </h3>
 
                 @if(!$this->pdfUrl)
-                    <div
-                        class="flex items-center gap-2 bg-gray-100 dark:bg-[#111418] rounded-lg p-1 border border-gray-200 dark:border-[#283039]">
-                        <button wire:click="cambiarTono(-1)"
-                            class="size-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-[#283039] text-slate-500 dark:text-[#9dabb9] hover:text-slate-900 dark:hover:text-white transition-colors"
-                            type="button">
-                            <span class="material-symbols-outlined text-[20px]">remove</span>
-                        </button>
-                        <span
-                            class="text-xs font-mono font-bold text-primary px-2 min-w-[3rem] text-center">{{ $tonoActual }}</span>
-                        <button wire:click="cambiarTono(1)"
-                            class="size-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-[#283039] text-slate-500 dark:text-[#9dabb9] hover:text-slate-900 dark:hover:text-white transition-colors"
-                            type="button">
-                            <span class="material-symbols-outlined text-[20px]">add</span>
-                        </button>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <!-- Control de Tonalidad -->
+                        <div class="flex items-center gap-1.5 bg-white dark:bg-zinc-900 rounded-lg p-1 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                            <button wire:click="cambiarTono(-1)"
+                                class="size-8 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                                title="Bajar medio tono (-1)"
+                                type="button">
+                                <span class="material-symbols-outlined text-[18px]">remove</span>
+                            </button>
+                            <span class="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 px-2 min-w-[2.5rem] text-center">{{ $tonoActual }}</span>
+                            <button wire:click="cambiarTono(1)"
+                                class="size-8 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                                title="Subir medio tono (+1)"
+                                type="button">
+                                <span class="material-symbols-outlined text-[18px]">add</span>
+                            </button>
+                        </div>
+
+                        <!-- Control de Tamaño de Letra -->
+                        <div class="flex items-center gap-1 bg-white dark:bg-zinc-900 rounded-lg p-1 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                            <button wire:click="cambiarTamanioLetra(-2)"
+                                class="h-8 px-2 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold text-xs transition-colors"
+                                title="Achicar letra"
+                                type="button">
+                                A-
+                            </button>
+                            <span class="text-xs font-mono text-zinc-400 px-1">{{ $tamanioLetra }}px</span>
+                            <button wire:click="cambiarTamanioLetra(2)"
+                                class="h-8 px-2 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold text-xs transition-colors"
+                                title="Agrandar letra"
+                                type="button">
+                                A+
+                            </button>
+                        </div>
                     </div>
                 @endif
-
-                <div class="hidden sm:flex gap-1">
-                    <button
-                        class="size-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-[#283039] text-slate-500 dark:text-[#9dabb9] hover:text-slate-900 dark:hover:text-white transition-colors"
-                        title="Toggle Chords" type="button">
-                        <span class="material-symbols-outlined text-[20px]">music_note</span>
-                    </button>
-                    <button
-                        class="size-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-[#283039] text-slate-500 dark:text-[#9dabb9] hover:text-slate-900 dark:hover:text-white transition-colors"
-                        title="Settings" type="button">
-                        <span class="material-symbols-outlined text-[20px]">settings</span>
-                    </button>
-                </div>
             </div>
-            <div class="p-0 h-[800px] w-full bg-white">
+            <div class="p-0 h-[800px] w-full bg-white dark:bg-[#18181b]">
                 @if($this->pdfUrl)
                     <iframe src="{{ $this->pdfUrl }}" class="w-full h-full" frameborder="0"></iframe>
                 @else
-                    <div class="p-6 md:px-8 py-6 md:py-8 overflow-y-auto max-h-[800px]">
-                        <h2 class="text-3xl font-black text-black dark:text-white mb-6">{{ $cancion->titulo }}</h2>
-                        <div class="font-mono text-base md:text-lg leading-loose text-slate-700 dark:text-white/90">
+                    <div class="p-6 md:p-8 overflow-y-auto max-h-[800px] font-mono select-text bg-white dark:bg-[#18181b]">
+                        <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">{{ $cancion->titulo }}</h2>
+                        <div>
                             {!! $this->renderLetraConAcordes($cancion->letra) !!}
                         </div>
                     </div>
