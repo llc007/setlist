@@ -2,6 +2,7 @@
 
 use App\Models\Banda;
 use App\Models\Setlist;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -61,7 +62,12 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
     {
         $setlists = $this->banda->setlists()
             ->withCount('canciones')
-            ->with('creador')
+            ->with([
+                'creador',
+                'canciones' => function ($q) {
+                    $q->orderBy('cancion_setlist.orden', 'asc');
+                },
+            ])
             ->orderBy('fecha', 'desc')
             ->paginate(12);
 
@@ -90,12 +96,12 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
         <flux:callout variant="success" icon="check-circle" heading="{{ session('status') }}" />
     @endif
 
-    <!-- Grilla de Setlists -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Grilla de Setlists estilo Pinterest (Masonry) -->
+    <div class="columns-1 md:columns-2 lg:columns-3 gap-6 [column-fill:_balance]">
         @forelse ($setlists as $setlist)
-            <div wire:key="setlist-card-{{ $setlist->id }}" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-indigo-500 transition-all">
+            <div wire:key="setlist-card-{{ $setlist->id }}" class="break-inside-avoid mb-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-amber-500/50 dark:hover:border-amber-400/50 transition-all flex flex-col justify-between space-y-4">
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between gap-2">
                         <flux:badge color="{{ match($setlist->tipo) { 'culto' => 'purple', 'ensayo' => 'amber', 'presentacion' => 'sky', default => 'zinc' } }}" size="sm">
                             {{ Str::headline($setlist->tipo) }}
                         </flux:badge>
@@ -105,7 +111,9 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
                         </flux:text>
                     </div>
 
-                    <flux:heading size="lg" level="2">{{ $setlist->nombre }}</flux:heading>
+                    <flux:heading size="lg" level="2" class="leading-snug">
+                        {{ $setlist->nombre }}
+                    </flux:heading>
 
                     @if ($setlist->descripcion)
                         <flux:text variant="subtle" class="text-sm line-clamp-2">
@@ -114,12 +122,54 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
                     @endif
                 </div>
 
-                <div class="space-y-4 pt-2">
-                    <div class="flex items-center justify-between text-xs py-2 px-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-                        <span class="text-zinc-500">{{ __('Canciones:') }}</span>
-                        <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $setlist->canciones_count }}</span>
-                    </div>
+                <!-- Listita Rápida de Canciones del Setlist -->
+                @if ($setlist->canciones->isNotEmpty())
+                    <div class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <div class="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 font-semibold">
+                            <span>{{ __('Repertorio') }}</span>
+                            <span class="text-[11px] font-bold text-zinc-600 dark:text-zinc-300">
+                                {{ $setlist->canciones_count }} {{ Str::plural('canción', $setlist->canciones_count) }}
+                            </span>
+                        </div>
 
+                        <div class="space-y-1.5">
+                            @foreach ($setlist->canciones as $idx => $cancion)
+                                @php
+                                    $tono = $cancion->pivot->tono ?: $cancion->tono_original;
+                                @endphp
+                                <div class="flex items-center justify-between gap-2 py-1 px-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100/80 dark:border-zinc-800/80 text-xs hover:bg-zinc-100/80 dark:hover:bg-zinc-800 transition">
+                                    <div class="flex items-center gap-2 truncate">
+                                        <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-[10px]">
+                                            {{ $idx + 1 }}
+                                        </span>
+                                        <span class="font-medium text-zinc-800 dark:text-zinc-200 truncate">
+                                            {{ $cancion->titulo }}
+                                        </span>
+                                    </div>
+
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        @if ($cancion->pivot->proposito)
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
+                                                {{ $cancion->pivot->proposito }}
+                                            </span>
+                                        @endif
+                                        @if ($tono)
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">
+                                                {{ $tono }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <div class="py-3 px-3 bg-zinc-50/60 dark:bg-zinc-800/30 rounded-xl text-center border border-dashed border-zinc-200 dark:border-zinc-700/60">
+                        <p class="text-xs text-zinc-400 italic">{{ __('Sin canciones aún') }}</p>
+                    </div>
+                @endif
+
+                <div class="pt-2">
                     <flux:button variant="primary" class="w-full" icon="queue-list" :href="route('bandas.setlists.show', [$banda->slug, $setlist->id])" wire:navigate>
                         {{ __('Abrir Setlist') }}
                     </flux:button>

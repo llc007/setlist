@@ -182,6 +182,7 @@
         {{ $slot }}
     </flux:main>
 
+    <flux:toast position="bottom end" />
     @fluxScripts
 </body>
 

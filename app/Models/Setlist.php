@@ -51,7 +51,7 @@ class Setlist extends Model
     public function canciones(): BelongsToMany
     {
         return $this->belongsToMany(Cancion::class, 'cancion_setlist')
-            ->withPivot(['id', 'orden', 'nota'])
+            ->withPivot(['id', 'orden', 'proposito', 'tono', 'observacion', 'nota'])
             ->orderBy('cancion_setlist.orden', 'asc')
             ->withTimestamps();
     }

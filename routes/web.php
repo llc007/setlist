@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DasboardController;
 use App\Http\Controllers\Auth\ProviderController;
+use App\Models\Banda;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -11,6 +12,9 @@ Route::get('/', function () {
 
 Route::get('/auth/{provider}/redirect', [ProviderController::class, 'redirect'])->name('socialite.redirect');
 Route::get('/auth/{provider}/callback', [ProviderController::class, 'callback'])->name('socialite.callback');
+
+// Vista pública compartible del Setlist (para enlaces de WhatsApp sin requerir inicio de sesión)
+Route::livewire('/setlist/{setlist}', 'pages::setlists.public-show')->name('setlists.public');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -54,6 +58,19 @@ Route::middleware(['auth'])->group(function () {
     Route::livewire('/repertorio', 'pages::repertorio.index')->name('repertorio');
 
     // Rutas del Módulo de Bandas y Setlists
+    Route::get('/setlists', function () {
+        $activeBandaId = session('active_banda_id');
+        $banda = $activeBandaId ? Banda::find($activeBandaId) : null;
+        if (! $banda) {
+            $banda = auth()->user()->bandas()->first() ?? Banda::first();
+        }
+        if ($banda) {
+            return redirect()->route('bandas.setlists.index', $banda->slug);
+        }
+
+        return redirect()->route('bandas.index');
+    })->name('setlists.index');
+
     Route::livewire('/bandas', 'pages::bandas.index')->name('bandas.index');
     Route::livewire('/bandas/{banda:slug}', 'pages::bandas.show')->name('bandas.show');
     Route::livewire('/bandas/{banda:slug}/configuracion', 'pages::bandas.configuracion')->name('bandas.configuracion');

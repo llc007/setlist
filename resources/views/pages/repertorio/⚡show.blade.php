@@ -46,9 +46,16 @@ new class extends Component {
         $this->actualizarTonoActual();
     }
 
-    public function guardarLetra()
+    public function abrirModalLetra(): void
+    {
+        $this->letra = $this->cancion->letra;
+        $this->dispatch('modal-show', name: 'modal-interactivo');
+    }
+
+    public function guardarLetra(): void
     {
         $this->cancion->update(['letra' => $this->letra]);
+        $this->cancion->refresh();
         $this->dispatch('modal-close', name: 'modal-interactivo');
     }
 
@@ -247,7 +254,7 @@ new class extends Component {
             <span class="text-slate-400 dark:text-[#9dabb9] material-symbols-outlined text-[16px]">chevron_right</span>
             <span class="text-slate-900 dark:text-white font-medium">{{ $cancion->titulo }}</span>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <button
                 class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-white dark:bg-[#283039] border border-gray-200 dark:border-transparent text-slate-700 dark:text-white text-xs font-bold hover:bg-gray-50 dark:hover:bg-[#3b4754] transition-colors shadow-sm"
                 type="button">
@@ -260,11 +267,18 @@ new class extends Component {
                 <span class="material-symbols-outlined text-[18px]">print</span>
                 <span class="hidden sm:inline">Imprimir / PDF</span>
             </a>
-            <button wire:click="$dispatch('abrir-modal-edicion', { id: {{ $cancion->id }} })"
+            <button wire:click="abrirModalLetra"
                 class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                 type="button">
-                <span class="material-symbols-outlined text-[18px]">edit</span>
-                <span>Editar</span>
+                <span class="material-symbols-outlined text-[18px]">edit_note</span>
+                <span>Editar Acordes y Letra</span>
+            </button>
+            <button wire:click="$dispatch('abrir-modal-edicion', { id: {{ $cancion->id }} })"
+                class="flex items-center justify-center gap-2 rounded-lg h-9 px-3 bg-white dark:bg-[#283039] border border-gray-200 dark:border-transparent text-slate-700 dark:text-white text-xs font-bold hover:bg-gray-50 dark:hover:bg-[#3b4754] transition-colors shadow-sm"
+                type="button"
+                title="Editar información general">
+                <span class="material-symbols-outlined text-[18px]">settings</span>
+                <span class="hidden sm:inline">Editar Info</span>
             </button>
         </div>
     </div>
@@ -325,7 +339,7 @@ new class extends Component {
                 </h3>
 
                 @if(!$this->pdfUrl)
-                    <div class="flex items-center gap-3 flex-wrap">
+                    <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
                         <!-- Control de Tonalidad -->
                         <div class="flex items-center gap-1.5 bg-white dark:bg-zinc-900 rounded-lg p-1 border border-zinc-200 dark:border-zinc-800 shadow-sm">
                             <button wire:click="cambiarTono(-1)"
@@ -359,6 +373,15 @@ new class extends Component {
                                 A+
                             </button>
                         </div>
+
+                        <!-- Botón Editar Acordes y Letra -->
+                        <button wire:click="abrirModalLetra"
+                            class="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-bold transition-colors shadow-sm"
+                            type="button"
+                            title="Editar Acordes y Letra">
+                            <span class="material-symbols-outlined text-[16px]">edit_note</span>
+                            <span>Editar Acordes y Letra</span>
+                        </button>
                     </div>
                 @endif
             </div>
@@ -368,9 +391,21 @@ new class extends Component {
                 @else
                     <div class="p-6 md:p-8 overflow-y-auto max-h-[800px] font-mono select-text bg-white dark:bg-[#18181b]">
                         <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">{{ $cancion->titulo }}</h2>
-                        <div>
-                            {!! $this->renderLetraConAcordes($cancion->letra) !!}
-                        </div>
+                        @if(empty(trim($cancion->letra ?? '')))
+                            <div class="flex flex-col items-center justify-center py-16 text-center">
+                                <span class="material-symbols-outlined text-4xl text-zinc-400 mb-2">queue_music</span>
+                                <p class="text-zinc-600 dark:text-zinc-400 text-sm font-medium mb-3">Esta canción aún no tiene letra ni acordes registrados.</p>
+                                <button wire:click="abrirModalLetra"
+                                    class="flex items-center gap-2 rounded-lg px-4 py-2 bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow">
+                                    <span class="material-symbols-outlined text-[18px]">add</span>
+                                    <span>Agregar Letra y Acordes</span>
+                                </button>
+                            </div>
+                        @else
+                            <div>
+                                {!! $this->renderLetraConAcordes($cancion->letra) !!}
+                            </div>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -424,8 +459,8 @@ new class extends Component {
 
                         <flux:menu>
                             <flux:menu.item icon="document-text"
-                                wire:click="$dispatch('modal-show', { name: 'modal-interactivo' })">
-                                Interactivo
+                                wire:click="abrirModalLetra">
+                                Editar Acordes y Letra
                             </flux:menu.item>
                             <flux:menu.item icon="folder-open"
                                 wire:click="$dispatch('modal-show', { name: 'modal-recurso' })">
@@ -495,21 +530,21 @@ new class extends Component {
 
     <livewire:canciones.editar />
 
-    <flux:modal name="modal-interactivo" class="md:w-[600px] space-y-6">
+    <flux:modal name="modal-interactivo" class="md:w-[700px] space-y-6">
         <div class="space-y-2">
-            <flux:heading size="lg">Editor Interactivo</flux:heading>
-            <flux:subheading>Escribe la letra y añade acordes entre corchetes, ej: [C] Letra</flux:subheading>
+            <flux:heading size="lg">Editar Acordes y Letra</flux:heading>
+            <flux:subheading>Escribe la letra e ingresa los acordes entre corchetes antes de cada sílaba, ej: <span class="font-mono text-primary font-bold">[G] Dios [Em] incomparable</span></flux:subheading>
         </div>
 
-        <flux:textarea wire:model="letra" label="Letra con Acordes" rows="15"
-            placeholder="[C] Amazing grace [F] how sweet the sound..." />
+        <flux:textarea wire:model="letra" label="Letra con Acordes" rows="18" class="font-mono text-sm"
+            placeholder="[G] Amazing grace [Em] how sweet the sound..." />
 
         <div class="flex gap-2">
             <flux:spacer />
             <flux:modal.close>
                 <flux:button variant="ghost">Cancelar</flux:button>
             </flux:modal.close>
-            <flux:button wire:click="guardarLetra" variant="primary">Guardar</flux:button>
+            <flux:button wire:click="guardarLetra" variant="primary">Guardar Letra y Acordes</flux:button>
         </div>
     </flux:modal>
 

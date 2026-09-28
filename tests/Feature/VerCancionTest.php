@@ -89,3 +89,25 @@ it('can update lyrics via interactive editor', function () {
         'letra' => 'New [C] Lyrics',
     ]);
 });
+
+it('displays edit chords and lyrics button and can open modal', function () {
+    $user = User::factory()->create();
+    $categoria = Categoria::factory()->create();
+    $cancion = Cancion::factory()->create([
+        'categoria_id' => $categoria->id,
+        'titulo' => 'Song With Edit Button',
+        'letra' => '[C] Line one',
+        'pdf_path' => null,
+    ]);
+
+    actingAs($user)
+        ->get(route('ver-cancion', $cancion))
+        ->assertOk()
+        ->assertSee('Editar Acordes y Letra');
+
+    Livewire::actingAs($user)
+        ->test('pages::repertorio.show', ['cancion' => $cancion])
+        ->call('abrirModalLetra')
+        ->assertSet('letra', '[C] Line one')
+        ->assertDispatched('modal-show', name: 'modal-interactivo');
+});
