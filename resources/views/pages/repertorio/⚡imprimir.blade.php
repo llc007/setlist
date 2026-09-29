@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Cancion;
+use App\Services\ChordTransposer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -16,9 +17,6 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
     public int $tamanio = 16;
 
     public string $tonoActual = 'C';
-
-    private array $escalas = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    private array $bemoles = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
     public function mount(Cancion $cancion): void
     {
@@ -45,68 +43,17 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
 
     public function transponerAcorde(string $acorde, int $semitonos): string
     {
-        if ($semitonos === 0 || empty($acorde)) {
-            return $acorde;
-        }
-
-        return preg_replace_callback('/([A-G][b#]?)(.*)/', function ($match) use ($semitonos) {
-            $nota = $match[1];
-            $resto = $match[2];
-
-            if (str_contains($resto, '/')) {
-                [$sufijo, $bajo] = explode('/', $resto, 2);
-                $notaTrans = $this->shiftNota($nota, $semitonos);
-                $bajoTrans = $this->shiftNota($bajo, $semitonos);
-                return $notaTrans . $sufijo . '/' . $bajoTrans;
-            }
-
-            return $this->shiftNota($nota, $semitonos) . $resto;
-        }, $acorde);
-    }
-
-    private function shiftNota(string $nota, int $semitonos): string
-    {
-        $pos = array_search($nota, $this->escalas);
-        if ($pos === false) {
-            $pos = array_search($nota, $this->bemoles);
-        }
-        if ($pos === false) {
-            return $nota;
-        }
-
-        $nuevaPos = ($pos + $semitonos) % 12;
-        if ($nuevaPos < 0) {
-            $nuevaPos += 12;
-        }
-
-        return $this->escalas[$nuevaPos];
+        return ChordTransposer::transponerAcorde($acorde, $semitonos);
     }
 
     public function isAcordeToken(string $token): bool
     {
-        $token = trim($token);
-        if (empty($token) || $token === '//' || $token === '/' || $token === '||' || $token === '|') {
-            return true;
-        }
-
-        return (bool) preg_match('/^[A-G][b#]?(m|maj|min|dim|aug|sus[24]?|add[0-9]+|[0-9]+|b[0-9]+|#[0-9]+|\+|\*|°|ø|-)*(\/[A-G][b#]?)?$/i', $token);
+        return ChordTransposer::isAcordeToken($token);
     }
 
     public function isLineaDeAcordes(string $linea): bool
     {
-        $palabras = array_values(array_filter(explode(' ', trim($linea))));
-        if (empty($palabras)) {
-            return false;
-        }
-
-        $coincidencias = 0;
-        foreach ($palabras as $p) {
-            if ($this->isAcordeToken($p)) {
-                $coincidencias++;
-            }
-        }
-
-        return ($coincidencias / count($palabras)) >= 0.7;
+        return ChordTransposer::isLineaDeAcordes($linea);
     }
 
     public function renderLetraConAcordes($texto)

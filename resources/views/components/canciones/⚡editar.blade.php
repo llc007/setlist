@@ -2,6 +2,8 @@
 
 use App\Models\Cancion;
 use App\Models\Categoria;
+use App\Services\ChordTransposer;
+use Flux\Flux;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -11,6 +13,7 @@ new class extends Component {
     public $categoria_id;
     public $tono_original;
     public $codigo;
+    public bool $transponer_acordes = true;
 
     #[On('abrir-modal-edicion')]
     public function cargarCancion($id)
@@ -21,8 +24,10 @@ new class extends Component {
         $this->categoria_id = $cancion->categoria_id;
         $this->tono_original = $cancion->tono_original;
         $this->codigo = $cancion->codigo;
+        $this->transponer_acordes = true;
 
         $this->dispatch('modal-show', name: 'editar-cancion');
+        Flux::modal('editar-cancion')->show();
     }
 
     public function guardar()
@@ -33,14 +38,25 @@ new class extends Component {
         ]);
 
         $cancion = Cancion::findOrFail($this->cancionId);
-        $cancion->update([
+
+        $updateData = [
             'titulo' => $this->titulo,
             'categoria_id' => $this->categoria_id,
             'tono_original' => $this->tono_original,
             'codigo' => $this->codigo,
-        ]);
+        ];
+
+        if ($this->transponer_acordes && ! empty($this->tono_original) && ! empty($cancion->tono_original) && ! empty($cancion->letra)) {
+            $semitonos = ChordTransposer::semitonosEntre($cancion->tono_original, $this->tono_original);
+            if ($semitonos !== 0) {
+                $updateData['letra'] = ChordTransposer::transponerTexto($cancion->letra, $semitonos);
+            }
+        }
+
+        $cancion->update($updateData);
 
         $this->dispatch('modal-close', name: 'editar-cancion');
+        Flux::modal('editar-cancion')->close();
         $this->dispatch('cancion-actualizada');
     }
 
@@ -72,6 +88,8 @@ new class extends Component {
 
                 <flux:input wire:model="tono_original" label="Tono" />
             </div>
+
+            <flux:checkbox wire:model="transponer_acordes" label="Transponer acordes de la letra al cambiar de tono" />
 
             <flux:input wire:model="codigo" label="Código (Ej: H005)" />
 
