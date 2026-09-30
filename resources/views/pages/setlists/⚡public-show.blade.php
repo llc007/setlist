@@ -26,14 +26,9 @@ new #[Layout('components.layouts.blank')] class extends Component {
     <div class="max-w-3xl mx-auto space-y-6">
         <!-- Barra Superior / Marca -->
         <div class="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
-            <div class="flex items-center gap-2">
-                <div class="h-9 w-9 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black text-lg shadow-sm">
-                    S
-                </div>
-                <div>
-                    <span class="font-bold text-base text-zinc-900 dark:text-white tracking-tight">Setlist</span>
-                    <span class="text-xs text-zinc-400 block -mt-1">Vista Compartida</span>
-                </div>
+            <div class="flex items-center gap-3">
+                <x-app-logo />
+                <span class="text-xs px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium hidden sm:inline-block">Setlist Compartido</span>
             </div>
 
             <div class="flex items-center gap-2">
