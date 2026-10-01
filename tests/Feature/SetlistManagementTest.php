@@ -198,7 +198,7 @@ it('permite a cualquier persona ver el setlist compartido sin iniciar sesión', 
         ->assertSee('Tu Fidelidad')
         ->assertSee('Inicio')
         ->assertSee('Tono: D')
-        ->assertSee('<title>quetocamos.cl</title>', false);
+        ->assertSee('<title>quecantamos.cl</title>', false);
 });
 
 it('permite reordenar las canciones del setlist mediante drag and drop', function () {

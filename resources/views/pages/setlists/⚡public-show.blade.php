@@ -7,7 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('components.layouts.blank')] #[Title('quetocamos.cl')] class extends Component {
+new #[Layout('components.layouts.blank')] #[Title('quecantamos.cl')] class extends Component {
     public Setlist $setlist;
     public ?int $viewingCancionId = null;
 
