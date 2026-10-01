@@ -12,29 +12,29 @@
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     /* Custom Theme Colors */
-    --color-primary: #f59e0b;
-    --color-primary-hover: #d97706;
-    --color-background-light: #f6f7f8;
-    --color-background-dark: #0f1216;
-    --color-card-dark: #161b22;
-    --color-card-dark-hover: #1f2631;
-    --color-text-secondary: #9dabb9;
+    --color-primary: #1ed760;
+    --color-primary-hover: #1db954;
+    --color-background-light: #f8fafc;
+    --color-background-dark: #121212;
+    --color-card-dark: #181818;
+    --color-card-dark-hover: #242424;
+    --color-text-secondary: #a7a7a7;
 
-    /* Brand Colors (QueCantamos) */
-    --color-brand-amber: #f59e0b;
-    --color-brand-amber-dark: #d97706;
-    --color-brand-charcoal: #12151a;
+    /* Brand Colors (Setlist - Spotify style) */
+    --color-brand-green: #1ed760;
+    --color-brand-green-dark: #1db954;
+    --color-brand-charcoal: #121212;
 
     /* Flux UI Accent Colors */
-    --color-accent: #f59e0b;
-    --color-accent-content: #f59e0b;
+    --color-accent: #1ed760;
+    --color-accent-content: #1ed760;
     --color-accent-foreground: #000000;
 }
 
 @layer theme {
     .dark {
-        --color-accent: #f59e0b;
-        --color-accent-content: #fbbf24;
+        --color-accent: #1ed760;
+        --color-accent-content: #1ed760;
         --color-accent-foreground: #000000;
     }
 }

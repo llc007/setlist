@@ -20,3 +20,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Skills binaries (descargados automáticamente según el OS)
+/.github/skills/*/scripts/bin/
+/.agents/skills/*/scripts/bin/
+
