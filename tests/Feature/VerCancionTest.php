@@ -273,3 +273,27 @@ it('does not transpose lyrics when transponer_acordes is disabled in edit modal'
         'letra' => "        A        D\nLetra intacta",
     ]);
 });
+
+it('can toggle between 1 and 2 columns for song lyrics and chords', function () {
+    $user = User::factory()->create();
+    $categoria = Categoria::factory()->create();
+    $cancion = Cancion::factory()->create([
+        'categoria_id' => $categoria->id,
+        'titulo' => 'Column Test Song',
+        'tono_original' => 'C',
+        'letra' => "[C]Línea 1\n[G]Línea 2\n[Am]Línea 3\n[F]Línea 4",
+        'pdf_path' => null,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::repertorio.show', ['cancion' => $cancion])
+        ->assertSet('columnas', 1)
+        ->assertSee('1 Columna')
+        ->call('toggleColumnas')
+        ->assertSet('columnas', 2)
+        ->assertSee('2 Columnas')
+        ->assertSee('md:columns-2')
+        ->call('toggleColumnas')
+        ->assertSet('columnas', 1)
+        ->assertSee('1 Columna');
+});

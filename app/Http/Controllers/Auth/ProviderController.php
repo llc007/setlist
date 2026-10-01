@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use Spatie\Permission\Models\Role;
 
 class ProviderController extends Controller
 {
@@ -38,6 +39,13 @@ class ProviderController extends Controller
                     'avatar' => $socialUser->getAvatar(),
                     'password' => null,
                 ]);
+            }
+
+            // Si el correo está configurado como superadmin, asignar rol automáticamente
+            $superadminEmails = config('auth.superadmins', []);
+            if (in_array($user->email, $superadminEmails, true) && ! $user->hasRole('SuperAdministrador')) {
+                $role = Role::findOrCreate('SuperAdministrador');
+                $user->assignRole($role);
             }
 
             Auth::login($user, true);

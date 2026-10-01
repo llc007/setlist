@@ -12,11 +12,11 @@
             <flux:sidebar.brand :href="route('admin')" :current="request()->routeIs('admin')" wire:navigate class="px-2">
                 <div class="flex items-center gap-2.5">
                     <div
-                        class="flex aspect-square size-8 items-center justify-center rounded-lg bg-zinc-900 dark:bg-zinc-800 text-white p-1 shrink-0 shadow-sm border border-zinc-700/50">
-                        <x-app-logo-icon class="size-6 text-white" />
+                        class="flex aspect-square size-8 items-center justify-center rounded-lg bg-zinc-100 dark:bg-[#181818] text-zinc-900 dark:text-white p-1 shrink-0 shadow-xs border border-zinc-200 dark:border-[#282828]">
+                        <x-app-logo-icon class="size-6 text-zinc-900 dark:text-white" />
                     </div>
                     <div class="flex items-center font-sans tracking-tight in-data-flux-sidebar-collapsed-desktop:hidden">
-                        <span class="text-base font-extrabold text-zinc-900 dark:text-white leading-none">quecantamos</span><span class="text-base font-black text-amber-500 leading-none">.cl</span>
+                        <span class="text-base font-extrabold text-zinc-900 dark:text-white leading-none">quecantamos</span><span class="text-base font-black text-[#1ed760] leading-none">.cl</span>
                     </div>
                 </div>
             </flux:sidebar.brand>
@@ -49,36 +49,36 @@
             </flux:sidebar.item>
 
             @if ($activeBanda)
-                <flux:navlist.group heading="{{ $activeBanda->nombre }}" expandable icon="star" :expanded="request()->routeIs('bandas.show') || request()->routeIs('bandas.repertorio.*') || request()->routeIs('bandas.setlists.*') || request()->routeIs('bandas.miembros')">
-                    <flux:navlist.item icon="home" :href="route('bandas.show', $activeBanda->slug)" :current="request()->routeIs('bandas.show')" wire:navigate>
+                <flux:sidebar.group heading="{{ $activeBanda->nombre }}" expandable icon="star" :expanded="request()->routeIs('bandas.show') || request()->routeIs('bandas.repertorio.*') || request()->routeIs('bandas.setlists.*') || request()->routeIs('bandas.miembros')">
+                    <flux:sidebar.item icon="home" :href="route('bandas.show', $activeBanda->slug)" :current="request()->routeIs('bandas.show')" wire:navigate>
                         {{ __('Inicio Banda') }}
-                    </flux:navlist.item>
-                    <flux:navlist.item icon="queue-list" :href="route('bandas.setlists.index', $activeBanda->slug)" :current="request()->routeIs('bandas.setlists.*')" wire:navigate>
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="queue-list" :href="route('bandas.setlists.index', $activeBanda->slug)" :current="request()->routeIs('bandas.setlists.*')" wire:navigate>
                         {{ __('Setlists') }}
-                    </flux:navlist.item>
-                    <flux:navlist.item icon="musical-note" :href="route('bandas.repertorio.index', $activeBanda->slug)" :current="request()->routeIs('bandas.repertorio.*')" wire:navigate>
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="musical-note" :href="route('bandas.repertorio.index', $activeBanda->slug)" :current="request()->routeIs('bandas.repertorio.*')" wire:navigate>
                         {{ __('Repertorio Banda') }}
-                    </flux:navlist.item>
-                    <flux:navlist.item icon="users" :href="route('bandas.miembros', $activeBanda->slug)" :current="request()->routeIs('bandas.miembros')" wire:navigate>
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="users" :href="route('bandas.miembros', $activeBanda->slug)" :current="request()->routeIs('bandas.miembros')" wire:navigate>
                         {{ __('Miembros') }}
-                    </flux:navlist.item>
-                    <flux:navlist.item icon="cog-6-tooth" :href="route('bandas.configuracion', $activeBanda->slug)" :current="request()->routeIs('bandas.configuracion')" wire:navigate>
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="cog-6-tooth" :href="route('bandas.configuracion', $activeBanda->slug)" :current="request()->routeIs('bandas.configuracion')" wire:navigate>
                         {{ __('Configuración') }}
-                    </flux:navlist.item>
-                </flux:navlist.group>
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
             @endif
 
             @can('gestionar-usuarios')
-                <flux:navlist.group heading="Administración" expandable icon="shield-check" :expanded="request()->routeIs('admin.users.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.categorias.*') || request()->routeIs('admin.bandas.*')">
-                    <flux:navlist.item icon="user-group" :href="route('admin.bandas.index')"
-                        :current="request()->routeIs('admin.bandas.*')" wire:navigate>{{ __('Bandas Globales') }}</flux:navlist.item>
-                    <flux:navlist.item icon="users" :href="route('admin.users.index')"
-                        :current="request()->routeIs('admin.users.*')" wire:navigate>{{ __('Usuarios') }}</flux:navlist.item>
-                    <flux:navlist.item icon="key" :href="route('admin.roles.index')"
-                        :current="request()->routeIs('admin.roles.*')" wire:navigate>{{ __('Roles y Permisos') }}</flux:navlist.item>
-                    <flux:navlist.item icon="tag" :href="route('admin.categorias.index')"
-                        :current="request()->routeIs('admin.categorias.*')" wire:navigate>{{ __('Categorías') }}</flux:navlist.item>
-                </flux:navlist.group>
+                <flux:sidebar.group heading="Administración" expandable icon="shield-check" :expanded="request()->routeIs('admin.users.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.categorias.*') || request()->routeIs('admin.bandas.*')">
+                    <flux:sidebar.item icon="user-group" :href="route('admin.bandas.index')"
+                        :current="request()->routeIs('admin.bandas.*')" wire:navigate>{{ __('Bandas Globales') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="users" :href="route('admin.users.index')"
+                        :current="request()->routeIs('admin.users.*')" wire:navigate>{{ __('Usuarios') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="key" :href="route('admin.roles.index')"
+                        :current="request()->routeIs('admin.roles.*')" wire:navigate>{{ __('Roles y Permisos') }}</flux:sidebar.item>
+                    <flux:sidebar.item icon="tag" :href="route('admin.categorias.index')"
+                        :current="request()->routeIs('admin.categorias.*')" wire:navigate>{{ __('Categorías') }}</flux:sidebar.item>
+                </flux:sidebar.group>
             @endcan
         </flux:sidebar.nav>
 

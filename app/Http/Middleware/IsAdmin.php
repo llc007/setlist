@@ -19,7 +19,7 @@ class IsAdmin
 
         if (
             ! $user
-            || (! $user->hasRole('SuperAdministrador')
+            || (! $user->isSuperAdmin()
                 && ! $user->hasRole('Administrador de Banda')
                 && ! $user->hasRole('admin')
                 && ! $user->is_admin)

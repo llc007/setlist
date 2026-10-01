@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,9 +23,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Implicitly grant 'SuperAdministrador' role all permissions
+        // Implicitly grant superadministrators all permissions
         Gate::before(function ($user, $ability) {
-            return $user->hasRole('SuperAdministrador') ? true : null;
+            return $user->isSuperAdmin() ? true : null;
+        });
+
+        // Automatically assign SuperAdministrador role on login for configured superadmin emails
+        Event::listen(Login::class, function (Login $event): void {
+            $superadminEmails = config('auth.superadmins', []);
+            if ($event->user && in_array($event->user->email, $superadminEmails, true)) {
+                if (! $event->user->hasRole('SuperAdministrador')) {
+                    $role = Role::findOrCreate('SuperAdministrador');
+                    $event->user->assignRole($role);
+                }
+            }
         });
     }
 }

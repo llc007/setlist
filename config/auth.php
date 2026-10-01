@@ -114,4 +114,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Super Administrator Emails
+    |--------------------------------------------------------------------------
+    |
+    | List of email addresses granted SuperAdministrador role and access
+    | automatically. Can be comma-separated in the SUPERADMIN_EMAILS env variable.
+    |
+    */
+
+    'superadmins' => array_values(array_filter(array_map('trim', explode(',', (string) env('SUPERADMIN_EMAILS', 'llc007.1@gmail.com'))))),
+
 ];

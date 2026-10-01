@@ -141,6 +141,13 @@ new class extends Component {
         return ChordTransposer::isLineaDeAcordes($linea);
     }
 
+    public int $columnas = 1;
+
+    public function toggleColumnas(): void
+    {
+        $this->columnas = $this->columnas === 1 ? 2 : 1;
+    }
+
     public function renderLetraConAcordes($texto)
     {
         if (! $texto) {
@@ -149,7 +156,8 @@ new class extends Component {
 
         $lineas = explode("\n", $texto);
         $style = 'font-size: ' . $this->tamanioLetra . 'px;';
-        $html = '<div style="' . $style . '" class="font-mono leading-relaxed tracking-wide space-y-1">';
+        $columnClass = $this->columnas === 2 ? 'md:columns-2 gap-8 lg:gap-12 [column-rule:1px_dashed_rgba(150,150,150,0.25)]' : '';
+        $html = '<div style="' . $style . '" class="font-mono leading-relaxed tracking-wide space-y-1 ' . $columnClass . '">';
 
         foreach ($lineas as $lineaOriginal) {
             $linea = rtrim($lineaOriginal);
@@ -164,7 +172,7 @@ new class extends Component {
                 $header = htmlspecialchars($m[1]);
                 $resto = trim($m[2]);
 
-                $html .= '<div class="pt-3 pb-1">';
+                $html .= '<div class="pt-3 pb-1 break-inside-avoid">';
                 $html .= '<span class="font-bold text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm tracking-wider uppercase">' . $header . '</span>';
 
                 if (! empty($resto)) {
@@ -178,7 +186,7 @@ new class extends Component {
                             if ($this->transposicion !== 0 && $this->isAcordeToken($acorde)) {
                                 $acorde = $this->transponerAcorde($acorde, $this->transposicion);
                             }
-                            $html .= '<span class="font-bold text-amber-600 dark:text-amber-400">' . $acorde . '</span>';
+                            $html .= '<span class="font-bold text-[#1ed760]">' . $acorde . '</span>';
                         }
                     }
                 }
@@ -189,7 +197,7 @@ new class extends Component {
 
             // Líneas de solo acordes (estilo Cifra Club sobre la letra)
             if ($this->isLineaDeAcordes($linea)) {
-                $html .= '<div class="font-bold text-amber-600 dark:text-amber-400 whitespace-pre leading-none pt-2 pb-0.5">';
+                $html .= '<div class="font-bold text-[#1ed760] whitespace-pre leading-none pt-2 pb-0.5 break-inside-avoid">';
 
                 $tokens = preg_split('/(\s+)/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
                 foreach ($tokens as $token) {
@@ -210,7 +218,7 @@ new class extends Component {
 
             // Líneas con corchetes integrados [C] Letra
             if (str_contains($linea, '[')) {
-                $html .= '<div class="flex flex-wrap items-end gap-y-3 pt-1 pb-1">';
+                $html .= '<div class="flex flex-wrap items-end gap-y-3 pt-1 pb-1 break-inside-avoid">';
                 $partes = preg_split('/(\[[^\]]+\])/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
                 $acordeActual = '';
 
@@ -223,7 +231,7 @@ new class extends Component {
                     } else {
                         $textoSegmento = htmlspecialchars($parte);
                         $html .= '<div class="inline-flex flex-col justify-end text-left pr-1.5">';
-                        $html .= '<span class="font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm h-4 leading-none">' . $acordeActual . '</span>';
+                        $html .= '<span class="font-bold text-[#1ed760] text-xs sm:text-sm h-4 leading-none font-mono">' . $acordeActual . '</span>';
                         $html .= '<span class="text-zinc-900 dark:text-zinc-100 text-sm sm:text-base leading-tight">' . ($textoSegmento !== '' ? $textoSegmento : '&nbsp;') . '</span>';
                         $html .= '</div>';
                         $acordeActual = '';
@@ -234,7 +242,7 @@ new class extends Component {
             }
 
             // Línea normal de letra
-            $html .= '<div class="text-zinc-900 dark:text-zinc-100 whitespace-pre leading-relaxed py-0.5">' . htmlspecialchars($linea) . '</div>';
+            $html .= '<div class="text-zinc-900 dark:text-zinc-100 whitespace-pre leading-relaxed py-0.5 break-inside-avoid">' . htmlspecialchars($linea) . '</div>';
         }
 
         $html .= '</div>';
@@ -244,549 +252,542 @@ new class extends Component {
 }; ?>
 
 <div>
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div class="flex items-center gap-2 text-sm">
-            <a class="text-slate-500 dark:text-[#9dabb9] hover:text-primary transition-colors font-medium"
-                href="{{ route('repertorio') }}">Canciones</a>
-            <span class="text-slate-400 dark:text-[#9dabb9] material-symbols-outlined text-[16px]">chevron_right</span>
-            <span class="text-slate-900 dark:text-white font-medium">{{ $cancion->titulo }}</span>
+    <!-- Compact Navigation & Quick Actions -->
+    <div class="flex flex-wrap items-center justify-between gap-2.5 mb-3">
+        <div class="flex items-center gap-1.5 text-xs">
+            <a class="text-zinc-500 dark:text-[#a7a7a7] hover:text-[#1ed760] transition-colors font-medium"
+                href="{{ route('repertorio') }}">Repertorio</a>
+            <span class="text-zinc-400 dark:text-zinc-600 material-symbols-outlined text-sm">chevron_right</span>
+            <span class="text-zinc-900 dark:text-white font-semibold truncate max-w-[160px] sm:max-w-xs">{{ $cancion->titulo }}</span>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-            <button
-                class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-white dark:bg-[#283039] border border-gray-200 dark:border-transparent text-slate-700 dark:text-white text-xs font-bold hover:bg-gray-50 dark:hover:bg-[#3b4754] transition-colors shadow-sm"
-                type="button">
-                <span class="material-symbols-outlined text-[18px]">ios_share</span>
-                <span class="hidden sm:inline">Compartir</span>
-            </button>
+
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- Pantalla Completa (Spotify Green Primary Pill) -->
             <a href="{{ route('canciones.imprimir', ['cancion' => $cancion->id, 'semitonos' => $this->transposicion, 'tamanio' => $this->tamanioLetra]) }}"
                 target="_blank"
-                class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-white dark:bg-[#283039] border border-gray-200 dark:border-transparent text-slate-700 dark:text-white text-xs font-bold hover:bg-gray-50 dark:hover:bg-[#3b4754] transition-colors shadow-sm">
-                <span class="material-symbols-outlined text-[18px]">print</span>
-                <span class="hidden sm:inline">Imprimir / PDF</span>
+                class="inline-flex items-center gap-1.5 rounded-full h-8 px-3.5 bg-[#1ed760] hover:bg-[#1db954] text-black text-xs font-bold transition-all shadow-xs active:scale-95">
+                <span class="material-symbols-outlined text-base material-symbols-filled">slideshow</span>
+                <span>Pantalla Completa</span>
             </a>
+
+            <!-- Quick Edit Lyrics Button -->
             <button wire:click="$set('modoEdicion', true)"
-                class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-amber-600 text-white text-xs font-bold hover:bg-amber-700 transition-colors shadow-lg shadow-amber-600/20"
-                type="button">
-                <span class="material-symbols-outlined text-[18px]">tune</span>
-                <span>Editar Acordes y Letra</span>
+                class="inline-flex items-center gap-1 rounded-full h-8 px-3 bg-white dark:bg-[#181818] hover:bg-zinc-100 dark:hover:bg-[#242424] border border-zinc-200 dark:border-[#282828] text-zinc-800 dark:text-white text-xs font-semibold transition-colors shadow-2xs">
+                <span class="material-symbols-outlined text-base text-[#1ed760]">tune</span>
+                <span class="hidden sm:inline">Editar</span>
             </button>
+
+            <!-- Details Settings Button -->
             <button wire:click="$dispatch('abrir-modal-edicion', { id: {{ $cancion->id }} })"
-                class="flex items-center justify-center gap-2 rounded-lg h-9 px-4 bg-white dark:bg-[#283039] border border-gray-200 dark:border-transparent text-slate-700 dark:text-white text-xs font-bold hover:bg-gray-50 dark:hover:bg-[#3b4754] transition-colors shadow-sm"
-                type="button"
+                class="inline-flex items-center justify-center rounded-full size-8 bg-white dark:bg-[#181818] hover:bg-zinc-100 dark:hover:bg-[#242424] border border-zinc-200 dark:border-[#282828] text-zinc-500 dark:text-[#a7a7a7] hover:text-zinc-900 dark:hover:text-white transition-colors shadow-2xs"
                 title="Editar información general">
-                <span class="material-symbols-outlined text-[18px]">settings</span>
-                <span>Detalles</span>
+                <span class="material-symbols-outlined text-base">settings</span>
             </button>
         </div>
     </div>
 
-    <div class="flex flex-wrap justify-between items-end gap-6 pb-6 border-b border-gray-200 dark:border-[#283039]">
-        <div class="flex flex-col gap-2">
-            <h1 class="text-slate-900 dark:text-white text-3xl md:text-4xl font-black tracking-tight">
-                {{ $cancion->codigo ? $cancion->codigo . " - " . $cancion->titulo : $cancion->titulo }}
-            </h1>
-            <div class="flex items-center gap-2 text-slate-500 dark:text-[#9dabb9]">
-                <span class="material-symbols-outlined text-[20px]">mic</span>
-                <p class="text-lg font-normal">{{ $cancion->artista ?? 'Desconocido' }}</p>
+    <!-- Compact Song Header + Inline Metadata Pills (Prioritizing screen space for lyrics & chords) -->
+    <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-[#181818] border border-zinc-200 dark:border-[#282828] shadow-xs mb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    @if($cancion->codigo)
+                        <span class="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-[#a7a7a7] border border-zinc-200 dark:border-zinc-700">
+                            {{ $cancion->codigo }}
+                        </span>
+                    @endif
+                    <h1 class="text-base sm:text-lg md:text-xl font-black text-zinc-900 dark:text-white tracking-tight truncate">
+                        {{ $cancion->titulo }}
+                    </h1>
+                </div>
+                <p class="text-xs text-zinc-500 dark:text-[#a7a7a7] mt-0.5 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">mic</span>
+                    <span>{{ $cancion->artista ?? 'Desconocido' }}</span>
+                </p>
+            </div>
+
+            <!-- Compact Inline Meta Badges -->
+            <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#1ed760]/10 border border-[#1ed760]/30 text-xs font-bold text-emerald-700 dark:text-[#1ed760] font-mono">
+                    <span class="text-xs text-emerald-800/70 dark:text-[#1ed760]/70 font-sans">Tono:</span>
+                    {{ $tonoActual }}
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-[#242424] border border-zinc-200 dark:border-[#333333] text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                    {{ $cancion->categoria?->nombre ?? 'General' }}
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-[#242424] border border-zinc-200 dark:border-[#333333] text-xs font-medium text-zinc-600 dark:text-zinc-400 capitalize">
+                    {{ $cancion->ambito ?? 'Cristiano' }}
+                </span>
+                @if($cancion->es_publica)
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-medium text-emerald-700 dark:text-[#1ed760] bg-emerald-50 dark:bg-[#1ed760]/10 border border-emerald-200 dark:border-[#1ed760]/20">
+                        Pública
+                    </span>
+                @else
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                        Privada
+                    </span>
+                @endif
             </div>
         </div>
-        <a href="{{ route('canciones.imprimir', ['cancion' => $cancion->id, 'semitonos' => $this->transposicion, 'tamanio' => $this->tamanioLetra]) }}"
-            target="_blank"
-            class="flex items-center justify-center gap-2 rounded-lg h-10 px-5 bg-slate-900 dark:bg-white text-white dark:text-black text-sm font-bold hover:bg-slate-800 dark:hover:bg-gray-200 transition-colors shadow-md">
-            <span class="material-symbols-outlined text-[20px] material-symbols-filled">slideshow</span>
-            <span>Pantalla Completa / Impresión</span>
-        </a>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
-        <div
-            class="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-[#283039] shadow-sm">
-            <p class="text-slate-500 dark:text-[#9dabb9] text-xs font-bold uppercase tracking-wider mb-1">
-                Tonalidad</p>
-            <p class="text-slate-900 dark:text-white text-xl font-bold">{{ $tonoActual }}</p>
-        </div>
-        <div
-            class="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-[#283039] shadow-sm">
-            <p class="text-slate-500 dark:text-[#9dabb9] text-xs font-bold uppercase tracking-wider mb-1">
-                Ámbito</p>
-            <p class="text-slate-900 dark:text-white text-xl font-bold capitalize">{{ $cancion->ambito ?? 'cristiano' }}</p>
-        </div>
-        <div
-            class="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-[#283039] shadow-sm">
-            <p class="text-slate-500 dark:text-[#9dabb9] text-xs font-bold uppercase tracking-wider mb-1">
-                Categoría</p>
-            <p class="text-slate-900 dark:text-white text-xl font-bold">{{ $cancion->categoria?->nombre ?? 'General' }}</p>
-        </div>
-        <div
-            class="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-[#283039] shadow-sm">
-            <p class="text-slate-500 dark:text-[#9dabb9] text-xs font-bold uppercase tracking-wider mb-1">
-                Tipo</p>
-            <p class="text-slate-900 dark:text-white text-xl font-bold">{{ $cancion->es_publica ? 'Pública' : 'Privada' }}</p>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[600px] mt-6">
-        <div
-            class="lg:col-span-7 xl:col-span-8 flex flex-col bg-white dark:bg-[#18181b] rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm dark:shadow-2xl">
-            @if($modoEdicion)
-                <div x-data="editorAcordes({ initialText: @js($cancion->letra ?? '') })" class="flex flex-col h-full">
-                    <!-- Barra superior del Editor -->
-                    <div class="flex flex-wrap items-center justify-between p-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/90 dark:bg-[#18181b]/95 backdrop-blur-sm sticky top-0 z-20 gap-3">
-                        <div class="flex items-center gap-2.5">
-                            <span class="flex items-center justify-center size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                                <span class="material-symbols-outlined text-[20px]">tune</span>
-                            </span>
-                            <div>
-                                <h3 class="font-bold text-zinc-900 dark:text-zinc-100 text-sm flex items-center gap-2">
-                                    <span>Editor Interactivo de Acordes</span>
-                                    <span class="text-[11px] font-normal px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Arrastrar y Soltar</span>
-                                </h3>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <!-- Toggle Visual / Texto Plano -->
-                            <div class="flex bg-zinc-200 dark:bg-zinc-800 p-0.5 rounded-lg text-xs font-semibold">
-                                <button type="button" @click="tab = 'visual'"
-                                    :class="tab === 'visual' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                                    class="px-2.5 py-1 rounded-md transition-all">
-                                    Visual
-                                </button>
-                                <button type="button" @click="tab = 'raw'"
-                                    :class="tab === 'raw' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                                    class="px-2.5 py-1 rounded-md transition-all">
-                                    Texto
-                                </button>
-                            </div>
-
-                            <button type="button" wire:click="$set('modoEdicion', false)"
-                                class="h-8 px-3 rounded-lg text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
-                                Cancelar
-                            </button>
-
-                            <button type="button" @click="saveChanges($wire)"
-                                class="h-8 px-3.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-1.5 shadow-sm shadow-amber-600/30 transition">
-                                <span class="material-symbols-outlined text-[16px]">save</span>
-                                <span>Guardar Cambios</span>
-                            </button>
+    <!-- Full-Width Lyrics & Chords Viewer / Editor -->
+    <div class="w-full flex flex-col bg-white dark:bg-[#18181b] rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm dark:shadow-2xl">
+        @if($modoEdicion)
+            <div x-data="editorAcordes({ initialText: @js($cancion->letra ?? '') })" class="flex flex-col h-full">
+                <!-- Barra superior del Editor -->
+                <div class="flex flex-wrap items-center justify-between p-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/90 dark:bg-[#181818]/95 backdrop-blur-sm sticky top-0 z-20 gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <span class="flex items-center justify-center size-8 rounded-lg bg-[#1ed760]/10 text-emerald-700 dark:text-[#1ed760]">
+                            <span class="material-symbols-outlined text-xl">tune</span>
+                        </span>
+                        <div>
+                            <h3 class="font-bold text-zinc-900 dark:text-zinc-100 text-sm flex items-center gap-2">
+                                <span>Editor Interactivo de Acordes</span>
+                                <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-[#1ed760]/10 text-emerald-700 dark:text-[#1ed760] border border-[#1ed760]/20">Arrastrar y Soltar</span>
+                            </h3>
                         </div>
                     </div>
 
-                    <!-- Paleta rápida de acordes arrastrables -->
-                    <div x-show="tab === 'visual'" class="px-4 py-2 bg-amber-500/[0.04] dark:bg-amber-950/20 border-b border-amber-500/10 flex flex-wrap items-center gap-2 text-xs">
-                        <span class="font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1 shrink-0">
-                            <span class="material-symbols-outlined text-[15px]">drag_indicator</span>
-                            <span>Acordes rápidos:</span>
-                        </span>
-                        <div class="flex flex-wrap items-center gap-1.5 overflow-x-auto py-0.5">
-                            <template x-for="ch in paletteChords" :key="ch">
-                                <div draggable="true"
-                                    @dragstart="startDragPalette(ch, $event)"
-                                    @click="selectedChord = ch"
-                                    :class="selectedChord === ch ? 'ring-2 ring-amber-500 bg-amber-500 text-white dark:bg-amber-500' : 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-800 hover:bg-amber-50 dark:hover:bg-amber-950/40'"
-                                    class="cursor-grab active:cursor-grabbing select-none font-mono font-bold px-2 py-0.5 rounded shadow-2xs transition transform hover:scale-105"
-                                    :title="'Arrastra ' + ch + ' a cualquier línea o selecciónalo'">
-                                    <span x-text="ch"></span>
+                    <div class="flex items-center gap-2">
+                        <!-- Toggle Visual / Texto Plano -->
+                        <div class="flex bg-zinc-200 dark:bg-zinc-800 p-0.5 rounded-lg text-xs font-semibold">
+                            <button type="button" @click="tab = 'visual'"
+                                :class="tab === 'visual' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                                class="px-2.5 py-1 rounded-md transition-all">
+                                Visual
+                            </button>
+                            <button type="button" @click="tab = 'raw'"
+                                :class="tab === 'raw' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-xs' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                                class="px-2.5 py-1 rounded-md transition-all">
+                                Texto
+                            </button>
+                        </div>
+
+                        <button type="button" wire:click="$set('modoEdicion', false)"
+                            class="h-8 px-3 rounded-lg text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                            Cancelar
+                        </button>
+
+                        <button type="button" @click="saveChanges($wire)"
+                            class="h-8 px-3.5 rounded-lg text-xs font-bold bg-[#1ed760] hover:bg-[#1db954] text-black flex items-center gap-1.5 shadow-sm shadow-[#1ed760]/20 transition active:scale-95">
+                            <span class="material-symbols-outlined text-base">save</span>
+                            <span>Guardar Cambios</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Paleta rápida de acordes arrastrables -->
+                <div x-show="tab === 'visual'" class="px-4 py-2 bg-zinc-50 dark:bg-[#1e1e1e] border-b border-zinc-200 dark:border-[#282828] flex flex-wrap items-center gap-2 text-xs">
+                    <span class="font-bold text-zinc-700 dark:text-[#a7a7a7] uppercase tracking-wider flex items-center gap-1 shrink-0">
+                        <span class="material-symbols-outlined text-[15px] text-[#1ed760]">drag_indicator</span>
+                        <span>Acordes rápidos:</span>
+                    </span>
+                    <div class="flex flex-wrap items-center gap-1.5 overflow-x-auto py-0.5">
+                        <template x-for="ch in paletteChords" :key="ch">
+                            <div draggable="true"
+                                @dragstart="startDragPalette(ch, $event)"
+                                @click="selectedChord = ch"
+                                :class="selectedChord === ch ? 'ring-2 ring-[#1ed760] bg-[#1ed760] text-black font-bold' : 'bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 hover:border-[#1ed760] hover:text-[#1ed760]'"
+                                class="cursor-grab active:cursor-grabbing select-none font-mono font-bold px-2 py-0.5 rounded shadow-2xs transition transform hover:scale-105"
+                                :title="'Arrastra ' + ch + ' a cualquier línea o selecciónalo'">
+                                <span x-text="ch"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="ml-auto flex items-center gap-1 shrink-0">
+                        <input type="text" x-model="customChordInput" placeholder="Otro..." @keydown.enter.prevent="addCustomPaletteChord()" class="h-6 w-20 px-2 text-xs font-mono rounded bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 focus:outline-none focus:ring-1 focus:ring-[#1ed760] text-zinc-800 dark:text-zinc-200">
+                        <button type="button" @click="addCustomPaletteChord()" class="h-6 px-2 text-xs bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded font-bold hover:bg-[#1ed760] hover:text-black transition" title="Añadir a la paleta">+</button>
+                    </div>
+                </div>
+
+                <!-- Contenedor del Editor Visual -->
+                <div x-show="tab === 'visual'" class="p-4 md:p-6 overflow-y-auto max-h-[750px] font-mono select-text bg-white dark:bg-[#121212] space-y-3">
+                    <!-- Medidor oculto de ancho de carácter para alineación exacta -->
+                    <span x-ref="measureSpan" class="font-mono text-sm sm:text-base invisible absolute -left-[9999px] whitespace-pre select-none pointer-events-none">01234567890123456789</span>
+
+                    <div class="text-xs text-zinc-600 dark:text-zinc-400 mb-2 flex items-center gap-2 bg-zinc-50 dark:bg-[#181818] p-2.5 rounded-lg border border-zinc-200 dark:border-[#282828]">
+                        <span class="material-symbols-outlined text-base text-[#1ed760]">lightbulb</span>
+                        <span><b>Arrastra</b> acordes sobre la letra para sincronizarlos. Haz <b>clic</b> en la pista superior para colocar el acorde seleccionado (<span class="font-mono font-bold text-emerald-600 dark:text-[#1ed760]" x-text="selectedChord"></span>). Haz <b>clic en un acorde</b> para editarlo.</span>
+                    </div>
+
+                    <!-- Lista de líneas interactivas -->
+                    <template x-for="(line, lineIdx) in lines" :key="line.id">
+                        <div class="group relative py-1 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50 rounded-lg transition px-2">
+                            <!-- Caso 1: Header de Sección -->
+                            <template x-if="line.type === 'header'">
+                                <div class="flex items-center gap-2 pt-2 pb-1">
+                                    <span class="material-symbols-outlined text-lg text-zinc-400">bookmark</span>
+                                    <input type="text" x-model="line.text" class="font-bold text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm tracking-wider uppercase bg-transparent border-0 border-b border-zinc-300 dark:border-zinc-700 focus:border-[#1ed760] focus:ring-0 p-0.5 outline-none w-48">
+                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                                        <button type="button" @click="addLine(lineIdx)" class="text-xs px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200" title="Insertar línea debajo">+ Línea</button>
+                                        <button type="button" @click="removeLine(lineIdx)" class="text-xs p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded" title="Eliminar sección">
+                                            <span class="material-symbols-outlined text-base">delete</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Caso 2: Línea en blanco -->
+                            <template x-if="line.type === 'blank'">
+                                <div class="h-4 flex items-center justify-between group/blank">
+                                    <div class="h-px bg-zinc-100 dark:bg-zinc-800/60 w-full"></div>
+                                    <button type="button" @click="addLine(lineIdx)" class="opacity-0 group-hover/blank:opacity-100 text-xs text-zinc-400 hover:text-[#1ed760] whitespace-nowrap px-2">+ Añadir letra aquí</button>
+                                </div>
+                            </template>
+
+                            <!-- Caso 3: Línea con Letra y Acordes -->
+                            <template x-if="line.type === 'lyric'">
+                                <div class="space-y-0.5">
+                                    <!-- Pista de Acordes (Chord Track) -->
+                                    <div class="relative h-7 w-full border-b border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30 hover:bg-[#1ed760]/5 rounded-t transition cursor-crosshair"
+                                        @dragover.prevent="onDragOver(lineIdx, $event)"
+                                        @dragleave="onDragLeave(lineIdx, $event)"
+                                        @drop.prevent="onDrop(lineIdx, $event)"
+                                        @click="onTrackClick(lineIdx, $event)"
+                                        title="Haz clic aquí para agregar un acorde">
+
+                                        <!-- Indicador visual de posición al arrastrar -->
+                                        <div x-show="dragOverLineIdx === lineIdx && dragOverCol !== null"
+                                            :style="'left: ' + (dragOverCol * charWidth) + 'px;'"
+                                            class="absolute top-0 bottom-0 w-0.5 bg-[#1ed760] shadow-sm pointer-events-none z-20"></div>
+
+                                        <!-- Chips de Acordes colocados -->
+                                        <template x-for="(ch, chIdx) in line.chords" :key="ch.id">
+                                            <div data-chord-chip="true"
+                                                :style="'left: ' + (ch.col * charWidth) + 'px;'"
+                                                draggable="true"
+                                                @dragstart.stop="startDragChord(lineIdx, chIdx, $event)"
+                                                @click.stop="openEditChord(lineIdx, chIdx)"
+                                                class="absolute top-0.5 inline-flex items-center gap-1 font-mono font-bold text-xs text-black bg-[#1ed760] hover:bg-[#1db954] border border-[#1db954] rounded px-1.5 py-0.5 shadow-2xs cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-[#1ed760]/80 transition-all select-none z-10"
+                                                title="Haz clic para editar o arrastra para mover">
+                                                <span x-text="ch.chord"></span>
+                                                <button type="button" @click.stop="deleteChord(lineIdx, chIdx)" class="text-black/70 hover:text-black text-xs leading-none ml-0.5 font-bold" title="Eliminar acorde">&times;</button>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Línea de Letra editable -->
+                                    <div class="relative flex items-center justify-between gap-2">
+                                        <input type="text"
+                                            x-model="line.text"
+                                            placeholder="Escribe la letra aquí..."
+                                            class="w-full font-mono text-sm sm:text-base leading-relaxed tracking-wide bg-transparent border-0 border-b border-transparent focus:border-[#1ed760] focus:ring-0 text-zinc-900 dark:text-zinc-100 p-0 m-0 outline-none">
+
+                                        <!-- Botones flotantes de acción de línea -->
+                                        <div class="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 shrink-0">
+                                            <button type="button" @click="addLine(lineIdx)" class="p-1 rounded text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Añadir línea debajo">
+                                                <span class="material-symbols-outlined text-base">add</span>
+                                            </button>
+                                            <button type="button" @click="addHeader(lineIdx, 'Coro')" class="p-1 rounded text-zinc-400 hover:text-emerald-700 dark:hover:text-[#1ed760] hover:bg-[#1ed760]/10 text-xs font-bold" title="Insertar sección debajo">
+                                                +Sección
+                                            </button>
+                                            <button type="button" @click="removeLine(lineIdx)" class="p-1 rounded text-zinc-400 hover:text-red-600 hover:bg-red-500/10 dark:hover:bg-red-950/30" title="Eliminar línea">
+                                                <span class="material-symbols-outlined text-base">delete</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </template>
                         </div>
-                        <div class="ml-auto flex items-center gap-1 shrink-0">
-                            <input type="text" x-model="customChordInput" placeholder="Otro..." @keydown.enter.prevent="addCustomPaletteChord()" class="h-6 w-20 px-2 text-xs font-mono rounded bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 focus:outline-none focus:ring-1 ring-amber-500 text-zinc-800 dark:text-zinc-200">
-                            <button type="button" @click="addCustomPaletteChord()" class="h-6 px-2 text-xs bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded font-bold hover:bg-zinc-300 dark:hover:bg-zinc-600" title="Añadir a la paleta">+</button>
-                        </div>
-                    </div>
-
-                    <!-- Contenedor del Editor Visual -->
-                    <div x-show="tab === 'visual'" class="p-4 md:p-6 overflow-y-auto max-h-[750px] font-mono select-text bg-white dark:bg-[#18181b] space-y-3">
-                        <!-- Medidor oculto de ancho de carácter para alineación exacta -->
-                        <span x-ref="measureSpan" class="font-mono text-sm sm:text-base invisible absolute -left-[9999px] whitespace-pre select-none pointer-events-none">01234567890123456789</span>
-
-                        <div class="text-xs text-zinc-500 dark:text-zinc-400 mb-2 flex items-center gap-2 bg-zinc-50 dark:bg-zinc-900/50 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                            <span class="material-symbols-outlined text-[16px] text-amber-500">lightbulb</span>
-                            <span><b>Arrastra</b> acordes sobre la letra para sincronizarlos. Haz <b>clic</b> en la pista superior para colocar el acorde seleccionado (<span class="font-mono font-bold text-amber-600 dark:text-amber-400" x-text="selectedChord"></span>). Haz <b>clic en un acorde</b> para editarlo.</span>
-                        </div>
-
-                        <!-- Lista de líneas interactivas -->
-                        <template x-for="(line, lineIdx) in lines" :key="line.id">
-                            <div class="group relative py-1 hover:bg-zinc-50/80 dark:hover:bg-zinc-900/50 rounded-lg transition px-2">
-                                <!-- Caso 1: Header de Sección -->
-                                <template x-if="line.type === 'header'">
-                                    <div class="flex items-center gap-2 pt-2 pb-1">
-                                        <span class="material-symbols-outlined text-[18px] text-zinc-400">bookmark</span>
-                                        <input type="text" x-model="line.text" class="font-bold text-zinc-600 dark:text-zinc-300 text-xs sm:text-sm tracking-wider uppercase bg-transparent border-0 border-b border-zinc-300 dark:border-zinc-700 focus:border-amber-500 focus:ring-0 p-0.5 outline-none w-48">
-                                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                                            <button type="button" @click="addLine(lineIdx)" class="text-xs px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200" title="Insertar línea debajo">+ Línea</button>
-                                            <button type="button" @click="removeLine(lineIdx)" class="text-xs p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded" title="Eliminar sección">
-                                                <span class="material-symbols-outlined text-[16px]">delete</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <!-- Caso 2: Línea en blanco -->
-                                <template x-if="line.type === 'blank'">
-                                    <div class="h-4 flex items-center justify-between group/blank">
-                                        <div class="h-px bg-zinc-100 dark:bg-zinc-800/60 w-full"></div>
-                                        <button type="button" @click="addLine(lineIdx)" class="opacity-0 group-hover/blank:opacity-100 text-[10px] text-zinc-400 hover:text-amber-500 whitespace-nowrap px-2">+ Añadir letra aquí</button>
-                                    </div>
-                                </template>
-
-                                <!-- Caso 3: Línea con Letra y Acordes -->
-                                <template x-if="line.type === 'lyric'">
-                                    <div class="space-y-0.5">
-                                        <!-- Pista de Acordes (Chord Track) -->
-                                        <div class="relative h-7 w-full border-b border-dashed border-amber-500/20 bg-amber-500/[0.02] hover:bg-amber-500/[0.06] rounded-t transition cursor-crosshair"
-                                            @dragover.prevent="onDragOver(lineIdx, $event)"
-                                            @dragleave="onDragLeave(lineIdx, $event)"
-                                            @drop.prevent="onDrop(lineIdx, $event)"
-                                            @click="onTrackClick(lineIdx, $event)"
-                                            title="Haz clic aquí para agregar un acorde">
-
-                                            <!-- Indicador visual de posición al arrastrar -->
-                                            <div x-show="dragOverLineIdx === lineIdx && dragOverCol !== null"
-                                                :style="'left: ' + (dragOverCol * charWidth) + 'px;'"
-                                                class="absolute top-0 bottom-0 w-0.5 bg-amber-500 shadow-sm pointer-events-none z-20"></div>
-
-                                            <!-- Chips de Acordes colocados -->
-                                            <template x-for="(ch, chIdx) in line.chords" :key="ch.id">
-                                                <div data-chord-chip="true"
-                                                    :style="'left: ' + (ch.col * charWidth) + 'px;'"
-                                                    draggable="true"
-                                                    @dragstart.stop="startDragChord(lineIdx, chIdx, $event)"
-                                                    @click.stop="openEditChord(lineIdx, chIdx)"
-                                                    class="absolute top-0.5 inline-flex items-center gap-1 font-mono font-bold text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700/80 rounded px-1.5 py-0.5 shadow-2xs cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-amber-500 transition-all select-none z-10"
-                                                    title="Haz clic para editar o arrastra para mover">
-                                                    <span x-text="ch.chord"></span>
-                                                    <button type="button" @click.stop="deleteChord(lineIdx, chIdx)" class="text-zinc-400 hover:text-red-500 text-[10px] leading-none ml-0.5" title="Eliminar acorde">&times;</button>
-                                                </div>
-                                            </template>
-                                        </div>
-
-                                        <!-- Línea de Letra editable -->
-                                        <div class="relative flex items-center justify-between gap-2">
-                                            <input type="text"
-                                                x-model="line.text"
-                                                placeholder="Escribe la letra aquí..."
-                                                class="w-full font-mono text-sm sm:text-base leading-relaxed tracking-wide bg-transparent border-0 border-b border-transparent focus:border-amber-500 focus:ring-0 text-zinc-900 dark:text-zinc-100 p-0 m-0 outline-none">
-
-                                            <!-- Botones flotantes de acción de línea -->
-                                            <div class="opacity-0 group-hover:opacity-100 transition flex items-center gap-1 shrink-0">
-                                                <button type="button" @click="addLine(lineIdx)" class="p-1 rounded text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Añadir línea debajo">
-                                                    <span class="material-symbols-outlined text-[16px]">add</span>
-                                                </button>
-                                                <button type="button" @click="addHeader(lineIdx, 'Coro')" class="p-1 rounded text-zinc-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-[11px] font-bold" title="Insertar sección debajo">
-                                                    +Sección
-                                                </button>
-                                                <button type="button" @click="removeLine(lineIdx)" class="p-1 rounded text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30" title="Eliminar línea">
-                                                    <span class="material-symbols-outlined text-[16px]">delete</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-
-                        <!-- Botones de añadir al final -->
-                        <div class="pt-4 flex items-center gap-2 border-t border-zinc-100 dark:border-zinc-800/80">
-                            <button type="button" @click="addLine(lines.length - 1)" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-amber-500 hover:text-amber-500 transition">
-                                <span class="material-symbols-outlined text-[16px]">add</span>
-                                <span>Añadir Línea al Final</span>
-                            </button>
-                            <button type="button" @click="addHeader(lines.length - 1, 'Nueva Sección')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-amber-500 hover:text-amber-500 transition">
-                                <span class="material-symbols-outlined text-[16px]">bookmark_add</span>
-                                <span>Añadir Sección</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Modo Texto Plano -->
-                    <div x-show="tab === 'raw'" class="p-4 md:p-6 bg-white dark:bg-[#18181b] flex flex-col h-full">
-                        <p class="text-xs text-zinc-500 mb-2">Edita el texto con acordes directamente. Al volver a la pestaña <b>Visual</b>, los cambios se sincronizarán automáticamente.</p>
-                        <textarea x-model="rawText" class="w-full h-[600px] font-mono p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 ring-amber-500/30"></textarea>
-                    </div>
-
-                    <!-- Modal Flotante de Edición de Acorde -->
-                    <template x-if="editingChord !== null">
-                        <div x-cloak
-                            @click.outside="saveEditChord()"
-                            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
-                            @keydown.escape.window="closeEditChord()"
-                            @keydown.enter.window="saveEditChord()">
-                            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-2xl p-5 w-full max-w-sm space-y-4"
-                                @click.stop="">
-                                <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
-                                    <h4 class="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-amber-500 text-[18px]">music_note</span>
-                                        Editar Acorde
-                                    </h4>
-                                    <button type="button" @click="closeEditChord()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">&times;</button>
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-semibold text-zinc-500 mb-1">Nombre del Acorde</label>
-                                    <input type="text"
-                                        x-ref="chordEditInput"
-                                        x-model="chordEditValue"
-                                        @keydown.enter.prevent="saveEditChord()"
-                                        class="w-full font-mono text-xl font-bold text-center h-12 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-amber-600 dark:text-amber-400 focus:ring-2 ring-amber-500/40 outline-none uppercase">
-                                </div>
-
-                                <!-- Botones rápidos de notas y variaciones -->
-                                <div class="space-y-2">
-                                    <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Notas Base:</div>
-                                    <div class="flex flex-wrap gap-1">
-                                        <template x-for="n in ['C','D','E','F','G','A','B']" :key="n">
-                                            <button type="button" @click="chordEditValue = n" class="size-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 font-bold text-xs text-zinc-700 dark:text-zinc-300 hover:bg-amber-500 hover:text-white transition">
-                                                <span x-text="n"></span>
-                                            </button>
-                                        </template>
-                                    </div>
-
-                                    <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider pt-1">Sufijos comunes:</div>
-                                    <div class="flex flex-wrap gap-1">
-                                        <template x-for="s in ['m','7','maj7','sus4','add9','#','b','/']" :key="s">
-                                            <button type="button" @click="chordEditValue += s" class="px-2 h-7 rounded bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
-                                                <span x-text="s"></span>
-                                            </button>
-                                        </template>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                                    <button type="button" @click="deleteEditingChord()" class="text-xs text-red-500 hover:text-red-600 font-bold flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-[16px]">delete</span>
-                                        <span>Eliminar</span>
-                                    </button>
-                                    <div class="flex gap-2">
-                                        <button type="button" @click="closeEditChord()" class="px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                                            Cancelar
-                                        </button>
-                                        <button type="button" @click="saveEditChord()" class="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-sm transition">
-                                            Aplicar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </template>
+
+                    <!-- Botones de añadir al final -->
+                    <div class="pt-4 flex items-center gap-2 border-t border-zinc-100 dark:border-zinc-800/80">
+                        <button type="button" @click="addLine(lines.length - 1)" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-[#1ed760] hover:text-emerald-700 dark:hover:text-[#1ed760] transition">
+                            <span class="material-symbols-outlined text-base">add</span>
+                            <span>Añadir Línea al Final</span>
+                        </button>
+                        <button type="button" @click="addHeader(lines.length - 1, 'Nueva Sección')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-[#1ed760] hover:text-emerald-700 dark:hover:text-[#1ed760] transition">
+                            <span class="material-symbols-outlined text-base">bookmark_add</span>
+                            <span>Añadir Sección</span>
+                        </button>
+                    </div>
                 </div>
-            @else
-                <!-- Modo Lectura -->
-                <div
-                    class="flex flex-wrap items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-[#18181b]/90 backdrop-blur-sm sticky top-0 z-10 gap-3">
-                    <h3 class="text-zinc-900 dark:text-zinc-100 font-bold text-lg flex items-center gap-2">
-                        <span class="material-symbols-outlined text-amber-600 dark:text-amber-500">music_note</span>
-                        Letra y Acordes (Estilo Cifra)
-                    </h3>
 
-                    @if(!$this->pdfUrl)
-                        <div class="flex items-center gap-3 flex-wrap">
-                            <!-- Botón Editar Acordes y Letra -->
-                            <button wire:click="$set('modoEdicion', true)"
-                                class="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs border border-amber-500/30 transition-colors shadow-2xs"
-                                title="Editar letra y acordes interactivamente"
-                                type="button">
-                                <span class="material-symbols-outlined text-[16px]">tune</span>
-                                <span>Editar Acordes y Letra</span>
-                            </button>
+                <!-- Modo Texto Plano -->
+                <div x-show="tab === 'raw'" class="p-4 md:p-6 bg-white dark:bg-[#18181b] flex flex-col h-full">
+                    <p class="text-xs text-zinc-500 mb-2">Edita el texto con acordes directamente. Al volver a la pestaña <b>Visual</b>, los cambios se sincronizarán automáticamente.</p>
+                    <textarea x-model="rawText" class="w-full h-[600px] font-mono p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-[#1ed760]/30 focus:border-[#1ed760]"></textarea>
+                </div>
 
-                            <!-- Control de Tonalidad -->
-                            <div class="flex items-center gap-1.5 bg-white dark:bg-zinc-900 rounded-lg p-1 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                                <button wire:click="cambiarTono(-1)"
-                                    class="size-8 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-                                    title="Bajar medio tono (-1)"
-                                    type="button">
-                                    <span class="material-symbols-outlined text-[18px]">remove</span>
-                                </button>
-                                <span class="text-xs font-mono font-bold text-amber-600 dark:text-amber-400 px-2 min-w-[2.5rem] text-center" title="Tono actual">{{ $tonoActual }}</span>
-                                <button wire:click="cambiarTono(1)"
-                                    class="size-8 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-                                    title="Subir medio tono (+1)"
-                                    type="button">
-                                    <span class="material-symbols-outlined text-[18px]">add</span>
-                                </button>
+                <!-- Modal Flotante de Edición de Acorde -->
+                <template x-if="editingChord !== null">
+                    <div x-cloak
+                        @click.outside="saveEditChord()"
+                        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+                        @keydown.escape.window="closeEditChord()"
+                        @keydown.enter.window="saveEditChord()">
+                        <div class="bg-white dark:bg-[#181818] border border-zinc-200 dark:border-[#282828] rounded-2xl shadow-2xl p-5 w-full max-w-sm space-y-4"
+                            @click.stop="">
+                            <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                                <h4 class="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[#1ed760] text-lg">music_note</span>
+                                    Editar Acorde
+                                </h4>
+                                <button type="button" @click="closeEditChord()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">&times;</button>
                             </div>
 
-                            @if($this->transposicion !== 0)
-                                <div class="flex items-center gap-1.5">
-                                    <button wire:click="guardarTonoTranspuesto"
-                                        class="flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-colors"
-                                        title="Guardar permanente: fija {{ $tonoActual }} como tono original y transpone los acordes en la canción"
-                                        type="button">
-                                        <span class="material-symbols-outlined text-[16px]">save</span>
-                                        <span>Fijar en {{ $tonoActual }}</span>
+                            <div>
+                                <label class="block text-xs font-semibold text-zinc-500 mb-1">Nombre del Acorde</label>
+                                <input type="text"
+                                    x-ref="chordEditInput"
+                                    x-model="chordEditValue"
+                                    @keydown.enter.prevent="saveEditChord()"
+                                    class="w-full font-mono text-xl font-bold text-center h-12 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-[#1ed760] focus:ring-2 ring-[#1ed760]/40 outline-none uppercase">
+                            </div>
+
+                            <!-- Botones rápidos de notas y variaciones -->
+                            <div class="space-y-2">
+                                <div class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Notas Base:</div>
+                                <div class="flex flex-wrap gap-1">
+                                    <template x-for="n in ['C','D','E','F','G','A','B']" :key="n">
+                                        <button type="button" @click="chordEditValue = n" class="size-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 font-bold text-xs text-zinc-700 dark:text-zinc-300 hover:bg-[#1ed760] hover:text-black transition">
+                                            <span x-text="n"></span>
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <div class="text-xs font-bold text-zinc-400 uppercase tracking-wider pt-1">Sufijos comunes:</div>
+                                <div class="flex flex-wrap gap-1">
+                                    <template x-for="s in ['m','7','maj7','sus4','add9','#','b','/']" :key="s">
+                                        <button type="button" @click="chordEditValue += s" class="px-2 h-7 rounded bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
+                                            <span x-text="s"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                                <button type="button" @click="deleteEditingChord()" class="text-xs text-red-500 hover:text-red-600 font-bold flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">delete</span>
+                                    <span>Eliminar</span>
+                                </button>
+                                <div class="flex gap-2">
+                                    <button type="button" @click="closeEditChord()" class="px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                        Cancelar
                                     </button>
-                                    <button wire:click="restablecerTono"
-                                        class="flex items-center justify-center size-8 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors"
-                                        title="Restablecer al tono base ({{ $cancion->tono_original }})"
-                                        type="button">
-                                        <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+                                    <button type="button" @click="saveEditChord()" class="px-4 py-1.5 text-xs font-bold text-black bg-[#1ed760] hover:bg-[#1db954] rounded-lg shadow-sm transition">
+                                        Aplicar
                                     </button>
                                 </div>
-                            @endif
-
-                            <!-- Control de Tamaño de Letra -->
-                            <div class="flex items-center gap-1 bg-white dark:bg-zinc-900 rounded-lg p-1 border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                                <button wire:click="cambiarTamanioLetra(-2)"
-                                    class="h-8 px-2 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold text-xs transition-colors"
-                                    title="Achicar letra"
-                                    type="button">
-                                    A-
-                                </button>
-                                <span class="text-xs font-mono text-zinc-400 px-1">{{ $tamanioLetra }}px</span>
-                                <button wire:click="cambiarTamanioLetra(2)"
-                                    class="h-8 px-2 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold text-xs transition-colors"
-                                    title="Agrandar letra"
-                                    type="button">
-                                    A+
-                                </button>
                             </div>
                         </div>
-                    @endif
-                </div>
-                <div class="p-0 h-[800px] w-full bg-white dark:bg-[#18181b]">
-                    @if($this->pdfUrl)
-                        <iframe src="{{ $this->pdfUrl }}" class="w-full h-full" frameborder="0"></iframe>
-                    @else
-                        <div class="p-6 md:p-8 overflow-y-auto max-h-[800px] font-mono select-text bg-white dark:bg-[#18181b]">
-                            <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3">{{ $cancion->titulo }}</h2>
-                            @if(empty(trim($cancion->letra ?? '')))
-                                <div class="flex flex-col items-center justify-center py-16 text-center">
-                                    <span class="material-symbols-outlined text-4xl text-zinc-400 mb-2">queue_music</span>
-                                    <p class="text-zinc-600 dark:text-zinc-400 text-sm font-medium mb-3">Esta canción aún no tiene letra ni acordes registrados.</p>
-                                    <button wire:click="$set('modoEdicion', true)"
-                                        class="flex items-center gap-2 rounded-lg px-4 py-2 bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow">
-                                        <span class="material-symbols-outlined text-[18px]">add</span>
-                                        <span>Agregar Letra y Acordes</span>
-                                    </button>
-                                </div>
-                            @else
-                                <div>
-                                    {!! $this->renderLetraConAcordes($cancion->letra) !!}
-                                </div>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-            @endif
-        </div>
-        <div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-6">
+                    </div>
+                </template>
+            </div>
+        @else
+            <!-- Modo Lectura Compacto (Full Width) -->
             <div
-                class="bg-white dark:bg-[#1c2128] rounded-xl border border-gray-200 dark:border-[#283039] p-4 flex flex-col gap-3 shadow-md">
-                <div class="flex items-center gap-3">
-                    <div class="size-12 rounded-lg bg-cover bg-center shrink-0 shadow-sm"
-                        data-alt="Abstract album art cover with blue and purple gradients"
-                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBKGmAjgmzYKHvzXf7T7TZiUFSVQqc5nmnTIWQi6F4M7XuUw_6uATukUdeJ1tDgJYOF7oQvldG2biLUFtmN_N7nVyO8Wifre7OtAXdsqfI9YJv5I76UJwUF3kLsl23ms82olGb2IgKOHfJvxxsmuVjZBkl98Y_E-cQZRt4RNP4c56Dx_5ovdPBAli806kz8qsQVzCHNFMZMdVxQEQgrUjCaOAC3S65DWWfGYGAnJNJuumQWbQBEaWylajKj6DGb04WKWU6nTcwGczI8");'>
+                class="flex flex-wrap items-center justify-between px-3.5 py-2.5 sm:px-5 sm:py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/90 dark:bg-[#181818]/95 backdrop-blur-sm sticky top-0 z-10 gap-2">
+                <h3 class="text-zinc-900 dark:text-zinc-100 font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[#1ed760] text-lg">music_note</span>
+                    <span>Letra y Acordes</span>
+                </h3>
+
+                @if(!$this->pdfUrl)
+                    <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                        <!-- Botón Editar Acordes y Letra -->
+                        <button wire:click="$set('modoEdicion', true)"
+                            class="flex items-center gap-1 h-7 sm:h-8 px-2.5 rounded-full bg-[#1ed760]/10 hover:bg-[#1ed760]/20 text-emerald-700 dark:text-[#1ed760] font-bold text-xs border border-[#1ed760]/30 transition-colors shadow-2xs"
+                            title="Editar letra y acordes interactivamente"
+                            type="button">
+                            <span class="material-symbols-outlined text-[15px]">tune</span>
+                            <span class="hidden sm:inline">Editar</span>
+                        </button>
+
+                        <!-- Control de Tonalidad -->
+                        <div class="flex items-center gap-1 bg-white dark:bg-zinc-900 rounded-lg p-0.5 border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                            <button wire:click="cambiarTono(-1)"
+                                class="size-7 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                                title="Bajar medio tono (-1)"
+                                type="button">
+                                <span class="material-symbols-outlined text-base">remove</span>
+                            </button>
+                            <span class="text-xs font-mono font-bold text-[#1ed760] px-1.5 min-w-[2rem] text-center" title="Tono actual">{{ $tonoActual }}</span>
+                            <button wire:click="cambiarTono(1)"
+                                class="size-7 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                                title="Subir medio tono (+1)"
+                                type="button">
+                                <span class="material-symbols-outlined text-base">add</span>
+                            </button>
+                        </div>
+
+                        @if($this->transposicion !== 0)
+                            <div class="flex items-center gap-1">
+                                <button wire:click="guardarTonoTranspuesto"
+                                    class="flex items-center gap-1 h-7 sm:h-8 px-2.5 rounded-lg bg-[#1ed760] hover:bg-[#1db954] text-black font-bold text-xs shadow-xs transition-colors"
+                                    title="Guardar permanente: fija {{ $tonoActual }} como tono original y transpone los acordes en la canción"
+                                    type="button">
+                                    <span class="material-symbols-outlined text-[15px]">save</span>
+                                    <span>Fijar en {{ $tonoActual }}</span>
+                                </button>
+                                <button wire:click="restablecerTono"
+                                    class="flex items-center justify-center size-7 sm:size-8 rounded-lg bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors"
+                                    title="Restablecer al tono base ({{ $cancion->tono_original }})"
+                                    type="button">
+                                    <span class="material-symbols-outlined text-[15px]">restart_alt</span>
+                                </button>
+                            </div>
+                        @endif
+
+                        <!-- Control de Tamaño de Letra -->
+                        <div class="flex items-center gap-0.5 bg-white dark:bg-zinc-900 rounded-lg p-0.5 border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                            <button wire:click="cambiarTamanioLetra(-2)"
+                                class="h-7 px-1.5 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold text-xs transition-colors"
+                                title="Achicar letra"
+                                type="button">
+                                A-
+                            </button>
+                            <span class="text-xs font-mono text-zinc-400 px-1">{{ $tamanioLetra }}px</span>
+                            <button wire:click="cambiarTamanioLetra(2)"
+                                class="h-7 px-1.5 flex items-center justify-center rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold text-xs transition-colors"
+                                title="Agrandar letra"
+                                type="button">
+                                A+
+                            </button>
+                        </div>
+
+                        <!-- Botón 1 / 2 Columnas -->
+                        <button wire:click="toggleColumnas"
+                            class="flex items-center gap-1.5 h-7 sm:h-8 px-2.5 rounded-lg border text-xs font-semibold transition-all shadow-xs {{ $columnas === 2 ? 'bg-[#1ed760] text-black border-[#1ed760] font-bold shadow-[#1ed760]/20' : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800' }}"
+                            title="{{ $columnas === 2 ? 'Cambiar a 1 columna' : 'Mostrar letra y acordes en 2 columnas' }}"
+                            type="button">
+                            <span class="material-symbols-outlined text-base">{{ $columnas === 2 ? 'view_agenda' : 'view_column' }}</span>
+                            <span class="hidden sm:inline">{{ $columnas === 2 ? '2 Columnas' : '1 Columna' }}</span>
+                        </button>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-slate-900 dark:text-white text-sm font-bold truncate">{{ $cancion->titulo }}</p>
-                        <p class="text-slate-500 dark:text-[#9dabb9] text-xs truncate">Tono Original:
-                            {{ $cancion->tono_original }}
-                        </p>
+                @endif
+            </div>
+
+            <div class="p-0 min-h-[600px] w-full bg-white dark:bg-[#121212]">
+                @if($this->pdfUrl)
+                    <iframe src="{{ $this->pdfUrl }}" class="w-full h-[800px]" frameborder="0"></iframe>
+                @else
+                    <div class="p-4 sm:p-6 md:p-8 overflow-y-auto max-h-[850px] font-mono select-text bg-white dark:bg-[#121212]">
+                        @if(empty(trim($cancion->letra ?? '')))
+                            <div class="flex flex-col items-center justify-center py-16 text-center">
+                                <span class="material-symbols-outlined text-4xl text-zinc-400 mb-2">queue_music</span>
+                                <p class="text-zinc-600 dark:text-zinc-400 text-sm font-medium mb-3">Esta canción aún no tiene letra ni acordes registrados.</p>
+                                <button wire:click="$set('modoEdicion', true)"
+                                    class="flex items-center gap-2 rounded-full px-4 py-2 bg-[#1ed760] text-black text-xs font-bold hover:bg-[#1db954] transition-colors shadow-sm">
+                                    <span class="material-symbols-outlined text-lg">add</span>
+                                    <span>Agregar Letra y Acordes</span>
+                                </button>
+                            </div>
+                        @else
+                            <div>
+                                {!! $this->renderLetraConAcordes($cancion->letra) !!}
+                            </div>
+                        @endif
                     </div>
+                @endif
+            </div>
+        @endif
+    </div>
+
+    <!-- Secondary Cards Below Viewer (Full Width Grid: Player, Resources, Upload) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+        <!-- Compact Audio Player Card -->
+        <div class="bg-white dark:bg-[#181818] rounded-xl border border-zinc-200 dark:border-[#282828] p-4 flex flex-col justify-between gap-3 shadow-xs">
+            <div class="flex items-center gap-3">
+                <div class="size-11 rounded-lg bg-cover bg-center shrink-0 shadow-xs border border-zinc-200 dark:border-[#282828]"
+                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBKGmAjgmzYKHvzXf7T7TZiUFSVQqc5nmnTIWQi6F4M7XuUw_6uATukUdeJ1tDgJYOF7oQvldG2biLUFtmN_N7nVyO8Wifre7OtAXdsqfI9YJv5I76UJwUF3kLsl23ms82olGb2IgKOHfJvxxsmuVjZBkl98Y_E-cQZRt4RNP4c56Dx_5ovdPBAli806kz8qsQVzCHNFMZMdVxQEQgrUjCaOAC3S65DWWfGYGAnJNJuumQWbQBEaWylajKj6DGb04WKWU6nTcwGczI8");'>
                 </div>
-                <div
-                    class="w-full bg-gray-200 dark:bg-[#283039] h-1.5 rounded-full overflow-hidden mt-1 cursor-pointer">
-                    <div class="bg-primary h-full w-1/3 rounded-full"></div>
-                </div>
-                <div class="flex justify-between items-center text-slate-400 dark:text-[#9dabb9] text-xs font-mono">
-                    <span>1:12</span>
-                    <span>4:23</span>
-                </div>
-                <div class="flex justify-center items-center gap-4">
-                    <button
-                        class="text-slate-400 dark:text-[#9dabb9] hover:text-primary dark:hover:text-white transition-colors"
-                        type="button"><span class="material-symbols-outlined">skip_previous</span></button>
-                    <button
-                        class="size-10 flex items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary/90 transition transform hover:scale-105"
-                        type="button">
-                        <span class="material-symbols-outlined material-symbols-filled">play_arrow</span>
-                    </button>
-                    <button
-                        class="text-slate-400 dark:text-[#9dabb9] hover:text-primary dark:hover:text-white transition-colors"
-                        type="button"><span class="material-symbols-outlined">skip_next</span></button>
+                <div class="flex-1 min-w-0">
+                    <p class="text-zinc-900 dark:text-white text-xs sm:text-sm font-bold truncate">{{ $cancion->titulo }}</p>
+                    <p class="text-zinc-500 dark:text-[#a7a7a7] text-xs truncate">Tono Original: <span class="font-bold text-[#1ed760] font-mono">{{ $cancion->tono_original }}</span></p>
                 </div>
             </div>
 
-            <div
-                class="bg-white dark:bg-[#1c2128] rounded-xl border border-gray-200 dark:border-[#283039] overflow-hidden shadow-sm">
-                <div
-                    class="px-4 py-3 border-b border-gray-200 dark:border-[#283039] flex justify-between items-center bg-gray-50 dark:bg-[#1c2128]">
-                    <h3 class="text-slate-900 dark:text-white font-bold text-sm">Archivos y Partituras</h3>
+            <div class="space-y-1.5">
+                <div class="w-full bg-zinc-200 dark:bg-[#282828] h-1.5 rounded-full overflow-hidden cursor-pointer">
+                    <div class="bg-[#1ed760] h-full w-1/3 rounded-full"></div>
+                </div>
+
+                <div class="flex justify-between items-center text-zinc-500 dark:text-[#a7a7a7] text-xs font-mono">
+                    <span>1:12</span>
+                    <span>4:23</span>
+                </div>
+            </div>
+
+            <div class="flex justify-center items-center gap-4">
+                <button class="text-zinc-500 dark:text-[#a7a7a7] hover:text-zinc-900 dark:hover:text-white transition-colors" type="button">
+                    <span class="material-symbols-outlined text-xl">skip_previous</span>
+                </button>
+                <button class="size-9 flex items-center justify-center rounded-full bg-[#1ed760] text-black shadow-md hover:bg-[#1db954] transition transform hover:scale-105 active:scale-95" type="button">
+                    <span class="material-symbols-outlined material-symbols-filled text-xl">play_arrow</span>
+                </button>
+                <button class="text-zinc-500 dark:text-[#a7a7a7] hover:text-zinc-900 dark:hover:text-white transition-colors" type="button">
+                    <span class="material-symbols-outlined text-xl">skip_next</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Archivos y Partituras Card -->
+        <div class="bg-white dark:bg-[#181818] rounded-xl border border-zinc-200 dark:border-[#282828] overflow-hidden shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="px-3.5 py-2.5 border-b border-zinc-200 dark:border-[#282828] flex justify-between items-center bg-zinc-50 dark:bg-[#1e1e1e]">
+                    <h3 class="text-zinc-900 dark:text-white font-bold text-xs flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base text-zinc-400">folder</span>
+                        <span>Archivos y Partituras</span>
+                    </h3>
 
                     <flux:dropdown>
-                        <flux:button size="sm" icon="plus" variant="ghost">Agregar</flux:button>
+                        <flux:button size="xs" icon="plus" variant="ghost">Agregar</flux:button>
 
                         <flux:menu>
-                            <flux:menu.item icon="document-text"
-                                wire:click="abrirModalLetra">
+                            <flux:menu.item icon="document-text" wire:click="abrirModalLetra">
                                 Editar Acordes y Letra
                             </flux:menu.item>
-                            <flux:menu.item icon="folder-open"
-                                wire:click="$dispatch('modal-show', { name: 'modal-recurso' })">
-                                Recurso
+                            <flux:menu.item icon="folder-open" wire:click="$dispatch('modal-show', { name: 'modal-recurso' })">
+                                Subir Recurso
                             </flux:menu.item>
                         </flux:menu>
                     </flux:dropdown>
                 </div>
-                <div class="flex flex-col">
+
+                <div class="flex flex-col divide-y divide-zinc-100 dark:divide-[#282828] max-h-48 overflow-y-auto">
                     @forelse($cancion->recursos as $recurso)
-                        <div
-                            class="group flex items-center justify-between p-3 border-b border-gray-100 dark:border-[#283039] hover:bg-gray-50 dark:hover:bg-[#283039]/50 transition cursor-pointer">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="size-8 rounded bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-500">
-                                    <span class="material-symbols-outlined text-[20px]">
+                        <div class="group flex items-center justify-between p-2.5 hover:bg-zinc-50 dark:hover:bg-[#242424] transition cursor-pointer">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="size-7 rounded bg-[#1ed760]/10 flex items-center justify-center text-[#1ed760] shrink-0">
+                                    <span class="material-symbols-outlined text-base">
                                         @if($recurso->tipo == 'pdf') picture_as_pdf
                                         @elseif($recurso->tipo == 'audio') audio_file
                                         @else description @endif
                                     </span>
                                 </div>
-                                <div class="flex flex-col">
-                                    <p class="text-slate-900 dark:text-white text-sm font-medium">
-                                        {{ $recurso->etiqueta ?? 'Recurso' }}
-                                    </p>
-                                    <p class="text-slate-500 dark:text-[#9dabb9] text-xs uppercase">{{ $recurso->tipo }}</p>
+                                <div class="min-w-0">
+                                    <p class="text-zinc-900 dark:text-white text-xs font-medium truncate">{{ $recurso->etiqueta ?? 'Recurso' }}</p>
+                                    <p class="text-zinc-500 dark:text-[#a7a7a7] text-xs uppercase font-mono">{{ $recurso->tipo }}</p>
                                 </div>
                             </div>
                             <a href="{{ $recurso->url }}" target="_blank"
-                                class="text-slate-400 dark:text-[#9dabb9] hover:text-primary dark:hover:text-white opacity-0 group-hover:opacity-100 transition">
-                                <span class="material-symbols-outlined">download</span>
+                                class="text-zinc-400 dark:text-[#a7a7a7] hover:text-[#1ed760] opacity-0 group-hover:opacity-100 transition p-1">
+                                <span class="material-symbols-outlined text-lg">download</span>
                             </a>
                         </div>
                     @empty
-                        <div class="p-4 text-center text-slate-500 dark:text-slate-400 text-sm">
-                            No hay recursos disponibles.
+                        <div class="p-4 text-center text-zinc-400 dark:text-[#a7a7a7] text-xs">
+                            No hay recursos disponibles aún.
                         </div>
                     @endforelse
                 </div>
             </div>
-
-            <div
-                class="bg-white dark:bg-[#1c2128] rounded-xl border border-gray-200 dark:border-[#283039] overflow-hidden shadow-sm">
-                <div class="px-4 py-3 border-b border-gray-200 dark:border-[#283039] bg-gray-50 dark:bg-[#1c2128]">
-                    <h3 class="text-slate-900 dark:text-white font-bold text-sm">Tutoriales y Videos</h3>
-                </div>
-                <div class="p-3 grid grid-cols-2 gap-3">
-                    <div class="col-span-2 text-center text-slate-500 text-xs py-4">Proximamente videos</div>
-                </div>
-            </div>
-
-            <label
-                class="rounded-xl border-2 border-dashed border-gray-300 dark:border-[#283039] bg-gray-50 dark:bg-[#1c2128]/50 hover:bg-white dark:hover:bg-[#1c2128] hover:border-primary/50 dark:hover:border-primary/50 transition p-6 flex flex-col items-center justify-center gap-3 cursor-pointer group">
-                <input class="hidden" multiple="" type="file" />
-                <div
-                    class="size-10 rounded-full bg-gray-200 dark:bg-[#283039] group-hover:bg-primary/10 dark:group-hover:bg-primary/20 flex items-center justify-center text-slate-500 dark:text-[#9dabb9] group-hover:text-primary transition">
-                    <span class="material-symbols-outlined">cloud_upload</span>
-                </div>
-                <div class="text-center">
-                    <p class="text-slate-900 dark:text-white text-sm font-bold">Subir Recurso</p>
-                    <p class="text-slate-500 dark:text-[#9dabb9] text-xs">Arrastra archivos aquí o haz clic
-                    </p>
-                </div>
-            </label>
         </div>
+
+        <!-- Upload File Strip / Card -->
+        <label class="rounded-xl border-2 border-dashed border-zinc-300 dark:border-[#333] bg-zinc-50/70 dark:bg-[#181818]/60 hover:bg-zinc-100 dark:hover:bg-[#181818] hover:border-[#1ed760] dark:hover:border-[#1ed760]/50 transition p-4 flex flex-col items-center justify-center text-center gap-2.5 cursor-pointer group shadow-xs">
+            <input class="hidden" multiple="" type="file" />
+            <div class="size-10 rounded-full bg-zinc-100 dark:bg-[#282828] group-hover:bg-[#1ed760]/10 flex items-center justify-center text-zinc-500 dark:text-[#a7a7a7] group-hover:text-[#1ed760] transition">
+                <span class="material-symbols-outlined text-2xl">cloud_upload</span>
+            </div>
+            <div>
+                <p class="text-xs font-bold text-zinc-800 dark:text-white group-hover:text-[#1ed760] transition">Subir Recurso</p>
+                <p class="text-xs text-zinc-500 dark:text-[#a7a7a7]">Arrastra archivos PDF o audio aquí</p>
+            </div>
+        </label>
     </div>
 
     <livewire:canciones.editar />

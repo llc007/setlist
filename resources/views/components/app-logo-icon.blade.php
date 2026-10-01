@@ -4,7 +4,7 @@
           stroke="currentColor" stroke-width="4.5" stroke-linejoin="round" fill="none"/>
     
     <!-- Ecualizador Superior (Audio Waves) -->
-    <g stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round">
+    <g stroke="#1ed760" stroke-width="3.5" stroke-linecap="round">
         <line x1="47" y1="31" x2="47" y2="25" />
         <line x1="53.5" y1="33" x2="53.5" y2="21" />
         <line x1="60" y1="34" x2="60" y2="18" />
@@ -22,7 +22,7 @@
           stroke="currentColor" stroke-width="5.5" stroke-linecap="round" fill="none" />
 
     <!-- Ecualizador Inferior (Audio Waves) -->
-    <g stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round">
+    <g stroke="#1ed760" stroke-width="3.5" stroke-linecap="round">
         <line x1="47" y1="77" x2="47" y2="83" />
         <line x1="53.5" y1="76" x2="53.5" y2="87" />
         <line x1="60" y1="76" x2="60" y2="91" />

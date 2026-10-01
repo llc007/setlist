@@ -53,10 +53,13 @@ class RoleAndPermissionSeeder extends Seeder
         $adminRole = Role::findOrCreate('admin');
         $adminRole->givePermissionTo([$gestionarCanciones, $verRepertorio]);
 
-        // Assign SuperAdministrador role to llc007.1@gmail.com
-        $superAdminUser = User::where('email', 'llc007.1@gmail.com')->first();
-        if ($superAdminUser) {
-            $superAdminUser->assignRole($superAdminRole);
+        // Assign SuperAdministrador role to configured superadmins
+        $superAdminEmails = config('auth.superadmins', ['llc007.1@gmail.com']);
+        foreach ($superAdminEmails as $email) {
+            $superAdminUser = User::where('email', $email)->first();
+            if ($superAdminUser && ! $superAdminUser->hasRole($superAdminRole)) {
+                $superAdminUser->assignRole($superAdminRole);
+            }
         }
     }
 }

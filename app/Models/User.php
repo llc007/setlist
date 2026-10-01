@@ -84,4 +84,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Setlist::class, 'user_id');
     }
+
+    /**
+     * Determine if the user has superadmin privileges.
+     */
+    public function isSuperAdmin(): bool
+    {
+        $superadminEmails = config('auth.superadmins', []);
+
+        return in_array($this->email, $superadminEmails, true) || $this->hasRole('SuperAdministrador');
+    }
 }

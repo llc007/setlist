@@ -6,7 +6,7 @@ test('landing page returns successful status', function () {
     $response = $this->get('/');
 
     $response->assertSuccessful();
-    $response->assertSee('quecantamos');
+    $response->assertSee('setlist');
 });
 
 test('landing page shows login and register links for guests', function () {
@@ -26,10 +26,10 @@ test('landing page shows dashboard link when user is authenticated', function ()
     $response->assertSee(url('/dashboard'));
 });
 
-test('landing page contains music vintage hero elements', function () {
+test('landing page contains live stage elements and reactive lattice hero', function () {
     $response = $this->get('/');
 
     $response->assertSuccessful();
-    $response->assertSee('vinyl');
-    $response->assertSee('33');
+    $response->assertSee('hero-lattice');
+    $response->assertSee('repertorio');
 });
