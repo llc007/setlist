@@ -263,7 +263,7 @@ new class extends Component {
 
         <div class="flex items-center gap-1.5 sm:gap-2">
             <!-- Pantalla Completa (Spotify Green Primary Pill) -->
-            <a href="{{ route('canciones.imprimir', ['cancion' => $cancion->id, 'semitonos' => $this->transposicion, 'tamanio' => $this->tamanioLetra]) }}"
+            <a href="{{ route('canciones.imprimir', ['cancion' => $cancion->id, 'semitonos' => $this->transposicion, 'tamanio' => $this->tamanioLetra, 'columnas' => $this->columnas]) }}"
                 target="_blank"
                 class="inline-flex items-center gap-1.5 rounded-full h-8 px-3.5 bg-[#1ed760] hover:bg-[#1db954] text-black text-xs font-bold transition-all shadow-xs active:scale-95">
                 <span class="material-symbols-outlined text-base material-symbols-filled">slideshow</span>

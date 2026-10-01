@@ -16,12 +16,20 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
     #[Url]
     public int $tamanio = 16;
 
+    #[Url]
+    public int $columnas = 1;
+
     public string $tonoActual = 'C';
 
     public function mount(Cancion $cancion): void
     {
         $this->cancion = $cancion->load('categoria');
         $this->actualizarTonoActual();
+    }
+
+    public function toggleColumnas(): void
+    {
+        $this->columnas = $this->columnas === 1 ? 2 : 1;
     }
 
     public function cambiarTono(int $delta): void
@@ -64,7 +72,8 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
 
         $lineas = explode("\n", $texto);
         $style = 'font-size: ' . $this->tamanio . 'px;';
-        $html = '<div style="' . $style . '" class="font-mono leading-relaxed tracking-wide space-y-1">';
+        $columnClass = $this->columnas === 2 ? 'md:columns-2 print:columns-2 gap-8 lg:gap-12 [column-rule:1px_dashed_rgba(150,150,150,0.25)]' : '';
+        $html = '<div style="' . $style . '" class="font-mono leading-relaxed tracking-wide space-y-1 ' . $columnClass . '">';
 
         foreach ($lineas as $lineaOriginal) {
             $linea = rtrim($lineaOriginal);
@@ -79,7 +88,7 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
                 $header = htmlspecialchars($m[1]);
                 $resto = trim($m[2]);
 
-                $html .= '<div class="pt-3 pb-1">';
+                $html .= '<div class="pt-3 pb-1 break-inside-avoid">';
                 $html .= '<span class="font-bold text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm tracking-wider uppercase">' . $header . '</span>';
 
                 if (! empty($resto)) {
@@ -104,7 +113,7 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
 
             // Líneas de solo acordes (estilo Cifra Club sobre la letra)
             if ($this->isLineaDeAcordes($linea)) {
-                $html .= '<div class="font-bold text-[#1ed760] whitespace-pre leading-none pt-2 pb-0.5">';
+                $html .= '<div class="font-bold text-[#1ed760] whitespace-pre leading-none pt-2 pb-0.5 break-inside-avoid">';
 
                 $tokens = preg_split('/(\s+)/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
                 foreach ($tokens as $token) {
@@ -123,8 +132,33 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
                 continue;
             }
 
+            // Líneas con corchetes integrados [C] Letra
+            if (str_contains($linea, '[')) {
+                $html .= '<div class="flex flex-wrap items-end gap-y-3 pt-1 pb-1 break-inside-avoid">';
+                $partes = preg_split('/(\[[^\]]+\])/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
+                $acordeActual = '';
+
+                foreach ($partes as $parte) {
+                    if (preg_match('/\[([^\]]+)\]/', $parte, $coincidencias)) {
+                        $acordeActual = htmlspecialchars($coincidencias[1]);
+                        if ($this->semitonos !== 0) {
+                            $acordeActual = $this->transponerAcorde($acordeActual, $this->semitonos);
+                        }
+                    } else {
+                        $textoSegmento = htmlspecialchars($parte);
+                        $html .= '<div class="inline-flex flex-col justify-end text-left pr-1.5">';
+                        $html .= '<span class="font-bold text-[#1ed760] text-xs sm:text-sm h-4 leading-none font-mono">' . $acordeActual . '</span>';
+                        $html .= '<span class="text-zinc-900 dark:text-zinc-100 text-sm sm:text-base leading-tight">' . ($textoSegmento !== '' ? $textoSegmento : '&nbsp;') . '</span>';
+                        $html .= '</div>';
+                        $acordeActual = '';
+                    }
+                }
+                $html .= '</div>';
+                continue;
+            }
+
             // Línea normal de letra
-            $html .= '<div class="text-zinc-900 dark:text-zinc-100 whitespace-pre leading-relaxed py-0.5">' . htmlspecialchars($linea) . '</div>';
+            $html .= '<div class="text-zinc-900 dark:text-zinc-100 whitespace-pre leading-relaxed py-0.5 break-inside-avoid">' . htmlspecialchars($linea) . '</div>';
         }
 
         $html .= '</div>';
@@ -137,7 +171,7 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
 <div class="min-h-screen bg-white dark:bg-[#121214] text-zinc-900 dark:text-zinc-100 font-mono antialiased selection:bg-[#1ed760] selection:text-black">
     <!-- Barra Flotante de Herramientas (Oculta en Impresión) -->
     <header class="print:hidden sticky top-0 z-50 bg-white/95 dark:bg-[#18181b]/95 backdrop-blur border-b border-zinc-200 dark:border-zinc-800 p-4 shadow-md">
-        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
+        <div class="{{ $columnas === 2 ? 'max-w-7xl' : 'max-w-5xl' }} mx-auto flex flex-wrap items-center justify-between gap-4 transition-all">
             <div class="flex items-center gap-3">
                 <h1 class="font-sans font-extrabold text-lg text-zinc-900 dark:text-white">
                     {{ $cancion->titulo }}
@@ -173,6 +207,20 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
                     </button>
                 </div>
 
+                <!-- Alternar 1 / 2 Columnas -->
+                <button wire:click="toggleColumnas"
+                    class="h-9 px-3 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs {{ $columnas === 2 ? 'bg-[#1ed760] text-black border-[#1ed760] font-bold' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800' }}"
+                    title="{{ $columnas === 2 ? 'Cambiar a 1 columna' : 'Mostrar en 2 columnas' }}"
+                    type="button">
+                    @if($columnas === 2)
+                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/></svg>
+                        <span>2 Columnas</span>
+                    @else
+                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+                        <span>1 Columna</span>
+                    @endif
+                </button>
+
                 <!-- Botón Imprimir -->
                 <button onclick="window.print()" class="h-9 px-4 rounded-lg bg-[#1ed760] hover:bg-[#1db954] text-black font-sans font-bold text-xs flex items-center gap-2 shadow-sm transition">
                     <flux:icon.printer class="size-4" />
@@ -188,7 +236,7 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
     </header>
 
     <!-- Contenido Imprimible y de Pantalla Completa -->
-    <main class="max-w-4xl mx-auto p-6 md:p-12">
+    <main class="{{ $columnas === 2 ? 'max-w-7xl' : 'max-w-4xl' }} mx-auto p-6 md:p-12 transition-all">
         <!-- Encabezado de página visible SOLO al imprimir/guardar PDF (oculto en pantalla completa interactiva) -->
         <div class="hidden print:flex border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-8 items-baseline justify-between">
             <div>

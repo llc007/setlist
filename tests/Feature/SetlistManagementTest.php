@@ -197,7 +197,8 @@ it('permite a cualquier persona ver el setlist compartido sin iniciar sesión', 
         ->assertSee('Banda Sinaí')
         ->assertSee('Tu Fidelidad')
         ->assertSee('Inicio')
-        ->assertSee('Tono: D');
+        ->assertSee('Tono: D')
+        ->assertSee('<title>quetocamos.cl</title>', false);
 });
 
 it('permite reordenar las canciones del setlist mediante drag and drop', function () {

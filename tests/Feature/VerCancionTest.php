@@ -297,3 +297,47 @@ it('can toggle between 1 and 2 columns for song lyrics and chords', function () 
         ->assertSet('columnas', 1)
         ->assertSee('1 Columna');
 });
+
+it('can toggle between 1 and 2 columns in print and fullscreen view', function () {
+    $user = User::factory()->create();
+    $categoria = Categoria::factory()->create();
+    $cancion = Cancion::factory()->create([
+        'categoria_id' => $categoria->id,
+        'titulo' => 'Print Column Test Song',
+        'tono_original' => 'C',
+        'letra' => "[C]Línea 1\n[G]Línea 2\n[Am]Línea 3\n[F]Línea 4",
+        'pdf_path' => null,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::repertorio.imprimir', ['cancion' => $cancion])
+        ->assertSet('columnas', 1)
+        ->assertSee('1 Columna')
+        ->assertDontSee('print:columns-2')
+        ->call('toggleColumnas')
+        ->assertSet('columnas', 2)
+        ->assertSee('2 Columnas')
+        ->assertSee('print:columns-2')
+        ->assertSee('max-w-7xl')
+        ->call('toggleColumnas')
+        ->assertSet('columnas', 1)
+        ->assertSee('1 Columna');
+});
+
+it('loads 2 columns in print view when passed via url query parameter', function () {
+    $user = User::factory()->create();
+    $categoria = Categoria::factory()->create();
+    $cancion = Cancion::factory()->create([
+        'categoria_id' => $categoria->id,
+        'titulo' => 'Print Query Param Song',
+        'tono_original' => 'C',
+        'letra' => "[C]Línea 1\n[G]Línea 2",
+        'pdf_path' => null,
+    ]);
+
+    actingAs($user)
+        ->get(route('canciones.imprimir', ['cancion' => $cancion, 'columnas' => 2]))
+        ->assertOk()
+        ->assertSee('print:columns-2')
+        ->assertSee('2 Columnas');
+});
