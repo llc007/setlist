@@ -40,6 +40,11 @@ typography:
     fontSize: "0.75rem"
     fontWeight: 600
     lineHeight: 1.4
+  code:
+    fontFamily: "JetBrains Mono, ui-monospace, monospace"
+    fontSize: "0.875rem"
+    fontWeight: 500
+    lineHeight: 1.5
 rounded:
   sm: "4px"
   md: "8px"

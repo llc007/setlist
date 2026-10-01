@@ -93,7 +93,7 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
                             if ($this->semitonos !== 0 && $this->isAcordeToken($acorde)) {
                                 $acorde = $this->transponerAcorde($acorde, $this->semitonos);
                             }
-                            $html .= '<span class="font-bold text-amber-600 dark:text-amber-400">' . $acorde . '</span>';
+                            $html .= '<span class="font-bold text-[#1ed760]">' . $acorde . '</span>';
                         }
                     }
                 }
@@ -104,7 +104,7 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
 
             // Líneas de solo acordes (estilo Cifra Club sobre la letra)
             if ($this->isLineaDeAcordes($linea)) {
-                $html .= '<div class="font-bold text-amber-600 dark:text-amber-400 whitespace-pre leading-none pt-2 pb-0.5">';
+                $html .= '<div class="font-bold text-[#1ed760] whitespace-pre leading-none pt-2 pb-0.5">';
 
                 $tokens = preg_split('/(\s+)/', $linea, -1, PREG_SPLIT_DELIM_CAPTURE);
                 foreach ($tokens as $token) {
@@ -134,7 +134,7 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
 };
 ?>
 
-<div class="min-h-screen bg-white dark:bg-[#121214] text-zinc-900 dark:text-zinc-100 font-mono antialiased selection:bg-amber-500 selection:text-white">
+<div class="min-h-screen bg-white dark:bg-[#121214] text-zinc-900 dark:text-zinc-100 font-mono antialiased selection:bg-[#1ed760] selection:text-black">
     <!-- Barra Flotante de Herramientas (Oculta en Impresión) -->
     <header class="print:hidden sticky top-0 z-50 bg-white/95 dark:bg-[#18181b]/95 backdrop-blur border-b border-zinc-200 dark:border-zinc-800 p-4 shadow-md">
         <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
@@ -142,7 +142,10 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
                 <h1 class="font-sans font-extrabold text-lg text-zinc-900 dark:text-white">
                     {{ $cancion->titulo }}
                 </h1>
-                <span class="text-xs px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 font-bold">
+                @if(!empty($cancion->artista))
+                    <span class="text-xs text-zinc-500 dark:text-zinc-400 font-normal">· {{ $cancion->artista }}</span>
+                @endif
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-[#1ed760]/15 text-[#1ed760] font-mono font-bold border border-[#1ed760]/30">
                     {{ $tonoActual }}
                 </span>
             </div>
@@ -150,28 +153,28 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
             <div class="flex items-center gap-3 flex-wrap">
                 <!-- Tonalidad -->
                 <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                    <button wire:click="cambiarTono(-1)" class="h-8 px-2 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">
+                    <button wire:click="cambiarTono(-1)" class="h-8 px-2 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300 transition-colors">
                         Tono -
                     </button>
-                    <span class="text-xs font-bold text-amber-600 dark:text-amber-400 px-2 min-w-[2.5rem] text-center">{{ $tonoActual }}</span>
-                    <button wire:click="cambiarTono(1)" class="h-8 px-2 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">
+                    <span class="text-xs font-bold text-[#1ed760] px-2 min-w-[2.5rem] text-center font-mono">{{ $tonoActual }}</span>
+                    <button wire:click="cambiarTono(1)" class="h-8 px-2 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300 transition-colors">
                         Tono +
                     </button>
                 </div>
 
                 <!-- Tamaño de letra -->
                 <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                    <button wire:click="cambiarTamanio(-2)" class="h-8 px-2 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">
+                    <button wire:click="cambiarTamanio(-2)" class="h-8 px-2 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300 transition-colors">
                         A-
                     </button>
-                    <span class="text-xs text-zinc-400 px-1">{{ $tamanio }}px</span>
-                    <button wire:click="cambiarTamanio(2)" class="h-8 px-2 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300">
+                    <span class="text-xs text-zinc-400 px-1 font-mono">{{ $tamanio }}px</span>
+                    <button wire:click="cambiarTamanio(2)" class="h-8 px-2 font-bold text-xs hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded text-zinc-600 dark:text-zinc-300 transition-colors">
                         A+
                     </button>
                 </div>
 
                 <!-- Botón Imprimir -->
-                <button onclick="window.print()" class="h-9 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-sans font-bold text-xs flex items-center gap-2 shadow-sm transition">
+                <button onclick="window.print()" class="h-9 px-4 rounded-lg bg-[#1ed760] hover:bg-[#1db954] text-black font-sans font-bold text-xs flex items-center gap-2 shadow-sm transition">
                     <flux:icon.printer class="size-4" />
                     <span>Imprimir / Guardar PDF</span>
                 </button>
@@ -186,7 +189,8 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
 
     <!-- Contenido Imprimible y de Pantalla Completa -->
     <main class="max-w-4xl mx-auto p-6 md:p-12">
-        <div class="border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-8 flex items-baseline justify-between">
+        <!-- Encabezado de página visible SOLO al imprimir/guardar PDF (oculto en pantalla completa interactiva) -->
+        <div class="hidden print:flex border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-8 items-baseline justify-between">
             <div>
                 <h1 class="font-sans text-3xl font-black text-zinc-900 dark:text-white tracking-tight">
                     {{ $cancion->titulo }}
@@ -198,7 +202,7 @@ new #[Layout('components.layouts.blank')] #[Title('Vista de Impresión y Pantall
 
             <div class="text-right font-sans">
                 <span class="text-xs text-zinc-400 uppercase tracking-wider block">Tonalidad</span>
-                <span class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ $tonoActual }}</span>
+                <span class="text-2xl font-bold text-[#1ed760]">{{ $tonoActual }}</span>
             </div>
         </div>
 

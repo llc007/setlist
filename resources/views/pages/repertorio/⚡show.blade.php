@@ -507,67 +507,69 @@ new class extends Component {
                     </div>
 
                     <!-- Modal Flotante de Edición de Acorde -->
-                    <div x-show="editingChord !== null"
-                        x-cloak
-                        @click.outside="saveEditChord()"
-                        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
-                        @keydown.escape.window="editingChord = null"
-                        @keydown.enter.window="saveEditChord()">
-                        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-2xl p-5 w-full max-w-sm space-y-4"
-                            @click.stop="">
-                            <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
-                                <h4 class="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-amber-500 text-[18px]">music_note</span>
-                                    Editar Acorde
-                                </h4>
-                                <button type="button" @click="editingChord = null" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">&times;</button>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-semibold text-zinc-500 mb-1">Nombre del Acorde</label>
-                                <input type="text"
-                                    x-ref="chordEditInput"
-                                    x-model="editingChord.val"
-                                    class="w-full font-mono text-xl font-bold text-center h-12 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-amber-600 dark:text-amber-400 focus:ring-2 ring-amber-500/40 outline-none uppercase">
-                            </div>
-
-                            <!-- Botones rápidos de notas y variaciones -->
-                            <div class="space-y-2">
-                                <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Notas Base:</div>
-                                <div class="flex flex-wrap gap-1">
-                                    <template x-for="n in ['C','D','E','F','G','A','B']" :key="n">
-                                        <button type="button" @click="editingChord.val = n" class="size-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 font-bold text-xs text-zinc-700 dark:text-zinc-300 hover:bg-amber-500 hover:text-white transition">
-                                            <span x-text="n"></span>
-                                        </button>
-                                    </template>
+                    <template x-if="editingChord !== null">
+                        <div x-cloak
+                            @click.outside="saveEditChord()"
+                            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
+                            @keydown.escape.window="closeEditChord()"
+                            @keydown.enter.window="saveEditChord()">
+                            <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-2xl p-5 w-full max-w-sm space-y-4"
+                                @click.stop="">
+                                <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                                    <h4 class="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-amber-500 text-[18px]">music_note</span>
+                                        Editar Acorde
+                                    </h4>
+                                    <button type="button" @click="closeEditChord()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">&times;</button>
                                 </div>
 
-                                <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider pt-1">Sufijos comunes:</div>
-                                <div class="flex flex-wrap gap-1">
-                                    <template x-for="s in ['m','7','maj7','sus4','add9','#','b','/']" :key="s">
-                                        <button type="button" @click="editingChord.val += s" class="px-2 h-7 rounded bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
-                                            <span x-text="s"></span>
-                                        </button>
-                                    </template>
+                                <div>
+                                    <label class="block text-xs font-semibold text-zinc-500 mb-1">Nombre del Acorde</label>
+                                    <input type="text"
+                                        x-ref="chordEditInput"
+                                        x-model="chordEditValue"
+                                        @keydown.enter.prevent="saveEditChord()"
+                                        class="w-full font-mono text-xl font-bold text-center h-12 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-amber-600 dark:text-amber-400 focus:ring-2 ring-amber-500/40 outline-none uppercase">
                                 </div>
-                            </div>
 
-                            <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                                <button type="button" @click="deleteEditingChord()" class="text-xs text-red-500 hover:text-red-600 font-bold flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[16px]">delete</span>
-                                    <span>Eliminar</span>
-                                </button>
-                                <div class="flex gap-2">
-                                    <button type="button" @click="editingChord = null" class="px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                                        Cancelar
+                                <!-- Botones rápidos de notas y variaciones -->
+                                <div class="space-y-2">
+                                    <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Notas Base:</div>
+                                    <div class="flex flex-wrap gap-1">
+                                        <template x-for="n in ['C','D','E','F','G','A','B']" :key="n">
+                                            <button type="button" @click="chordEditValue = n" class="size-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 font-bold text-xs text-zinc-700 dark:text-zinc-300 hover:bg-amber-500 hover:text-white transition">
+                                                <span x-text="n"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+
+                                    <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider pt-1">Sufijos comunes:</div>
+                                    <div class="flex flex-wrap gap-1">
+                                        <template x-for="s in ['m','7','maj7','sus4','add9','#','b','/']" :key="s">
+                                            <button type="button" @click="chordEditValue += s" class="px-2 h-7 rounded bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">
+                                                <span x-text="s"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                                    <button type="button" @click="deleteEditingChord()" class="text-xs text-red-500 hover:text-red-600 font-bold flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                                        <span>Eliminar</span>
                                     </button>
-                                    <button type="button" @click="saveEditChord()" class="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-sm transition">
-                                        Aplicar
-                                    </button>
+                                    <div class="flex gap-2">
+                                        <button type="button" @click="closeEditChord()" class="px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                            Cancelar
+                                        </button>
+                                        <button type="button" @click="saveEditChord()" class="px-4 py-1.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-sm transition">
+                                            Aplicar
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </template>
                 </div>
             @else
                 <!-- Modo Lectura -->
@@ -834,6 +836,7 @@ new class extends Component {
                         selectedChord: 'A',
                         customChordInput: '',
                         editingChord: null,
+                        chordEditValue: '',
                         draggedChord: null,
                         dragOverLineIdx: null,
                         dragOverCol: null,
@@ -1113,12 +1116,12 @@ new class extends Component {
                         },
 
                         openEditChord(lineIdx, chordIdx) {
-                            const chord = this.lines[lineIdx].chords[chordIdx];
+                            const chord = this.lines[lineIdx]?.chords?.[chordIdx];
                             this.editingChord = {
                                 lineIdx: lineIdx,
-                                chordIdx: chordIdx,
-                                val: chord.chord
+                                chordIdx: chordIdx
                             };
+                            this.chordEditValue = chord ? chord.chord : '';
                             this.$nextTick(() => {
                                 if (this.$refs.chordEditInput) {
                                     this.$refs.chordEditInput.focus();
@@ -1127,15 +1130,20 @@ new class extends Component {
                             });
                         },
 
+                        closeEditChord() {
+                            this.editingChord = null;
+                            this.chordEditValue = '';
+                        },
+
                         saveEditChord() {
                             if (!this.editingChord) return;
-                            const val = (this.editingChord.val || '').trim();
+                            const val = (this.chordEditValue || '').trim();
                             const line = this.lines[this.editingChord.lineIdx];
-                            if (val && line && line.chords[this.editingChord.chordIdx]) {
+                            if (val && line && line.chords?.[this.editingChord.chordIdx]) {
                                 line.chords[this.editingChord.chordIdx].chord = val;
                                 this.selectedChord = val;
                             }
-                            this.editingChord = null;
+                            this.closeEditChord();
                         },
 
                         deleteEditingChord() {
@@ -1144,7 +1152,7 @@ new class extends Component {
                             if (line && line.chords) {
                                 line.chords.splice(this.editingChord.chordIdx, 1);
                             }
-                            this.editingChord = null;
+                            this.closeEditChord();
                         },
 
                         deleteChord(lineIdx, chordIdx) {
