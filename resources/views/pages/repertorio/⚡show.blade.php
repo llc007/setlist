@@ -148,16 +148,9 @@ new class extends Component {
         $this->columnas = $this->columnas === 1 ? 2 : 1;
     }
 
-    public function renderLetraConAcordes($texto)
+    public function renderizarBloqueLineas(array $lineas): string
     {
-        if (! $texto) {
-            return '';
-        }
-
-        $lineas = explode("\n", $texto);
-        $style = 'font-size: ' . $this->tamanioLetra . 'px;';
-        $columnClass = $this->columnas === 2 ? 'md:columns-2 gap-8 lg:gap-12 [column-rule:1px_dashed_rgba(150,150,150,0.25)]' : '';
-        $html = '<div style="' . $style . '" class="font-mono leading-relaxed tracking-wide space-y-1 ' . $columnClass . '">';
+        $html = '';
 
         foreach ($lineas as $lineaOriginal) {
             $linea = rtrim($lineaOriginal);
@@ -168,11 +161,16 @@ new class extends Component {
             }
 
             // Encabezados de sección tipo [Intro], [Primera Parte], [Coro], etc.
-            if (preg_match('/^\s*(\[[^\]]+\])\s*(.*)$/', $linea, $m)) {
-                $header = htmlspecialchars($m[1]);
-                $resto = trim($m[2]);
+            if (ChordTransposer::isSectionHeader($linea)) {
+                if (preg_match('/^\s*(\[[^\]]+\])\s*(.*)$/', $linea, $m)) {
+                    $header = htmlspecialchars($m[1]);
+                    $resto = trim($m[2]);
+                } else {
+                    $header = '[' . htmlspecialchars(rtrim(trim($linea), ':')) . ']';
+                    $resto = '';
+                }
 
-                $html .= '<div class="pt-3 pb-1 break-inside-avoid">';
+                $html .= '<div class="pt-3 first:pt-0 pb-1 break-inside-avoid">';
                 $html .= '<span class="font-bold text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm tracking-wider uppercase">' . $header . '</span>';
 
                 if (! empty($resto)) {
@@ -245,9 +243,35 @@ new class extends Component {
             $html .= '<div class="text-zinc-900 dark:text-zinc-100 whitespace-pre leading-relaxed py-0.5 break-inside-avoid">' . htmlspecialchars($linea) . '</div>';
         }
 
-        $html .= '</div>';
-
         return $html;
+    }
+
+    public function renderLetraConAcordes($texto)
+    {
+        if (! $texto) {
+            return '';
+        }
+
+        $lineas = explode("\n", $texto);
+        $style = 'font-size: ' . $this->tamanioLetra . 'px;';
+
+        if ($this->columnas === 2) {
+            [$col1Lineas, $col2Lineas] = ChordTransposer::dividirLineasEnDosColumnas($lineas);
+
+            if (! empty($col2Lineas)) {
+                $htmlCol1 = $this->renderizarBloqueLineas($col1Lineas);
+                $htmlCol2 = $this->renderizarBloqueLineas($col2Lineas);
+
+                return '<div style="' . $style . '" class="font-mono leading-relaxed tracking-wide grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">'
+                    . '<div class="space-y-1 min-w-0">' . $htmlCol1 . '</div>'
+                    . '<div class="space-y-1 min-w-0 md:border-l md:border-dashed md:border-zinc-200 dark:md:border-zinc-800 md:pl-8 lg:md:pl-12">' . $htmlCol2 . '</div>'
+                    . '</div>';
+            }
+        }
+
+        $html = $this->renderizarBloqueLineas($lineas);
+
+        return '<div style="' . $style . '" class="font-mono leading-relaxed tracking-wide space-y-1">' . $html . '</div>';
     }
 }; ?>
 

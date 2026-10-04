@@ -29,3 +29,83 @@ test('transpone texto con acordes en formato Cifra Club y corchetes', function (
 
     expect(ChordTransposer::transponerTexto($textoCorchetes, -2))->toBe($esperadoCorchetes);
 });
+
+test('detecta encabezados de seccion musical correctamente', function () {
+    expect(ChordTransposer::isSectionHeader('[Intro]'))->toBeTrue();
+    expect(ChordTransposer::isSectionHeader('[Estrofa 1]'))->toBeTrue();
+    expect(ChordTransposer::isSectionHeader('[Coro]'))->toBeTrue();
+    expect(ChordTransposer::isSectionHeader('[Puente]'))->toBeTrue();
+    expect(ChordTransposer::isSectionHeader('[Bridge]'))->toBeTrue();
+    expect(ChordTransposer::isSectionHeader('[Intro] G D Em'))->toBeTrue();
+    expect(ChordTransposer::isSectionHeader('Coro:'))->toBeTrue();
+    expect(ChordTransposer::isSectionHeader('Estrofa 2'))->toBeTrue();
+
+    // No debe detectar acordes o letras normales como encabezados
+    expect(ChordTransposer::isSectionHeader('[C]'))->toBeFalse();
+    expect(ChordTransposer::isSectionHeader('[F#m7]'))->toBeFalse();
+    expect(ChordTransposer::isSectionHeader('[G] Sé que mi redentor vive'))->toBeFalse();
+    expect(ChordTransposer::isSectionHeader('Solo en ti confío'))->toBeFalse();
+    expect(ChordTransposer::isSectionHeader('Final de los tiempos'))->toBeFalse();
+    expect(ChordTransposer::isSectionHeader(''))->toBeFalse();
+});
+
+test('divide lineas en dos columnas empezando la segunda columna con un encabezado de seccion', function () {
+    $cancion = <<<'EOD'
+[Intro]
+G  D  Em  C
+
+[Estrofa 1]
+G              D
+Sé que mi Redentor vive
+Em             C
+Y al fin se levantará
+
+[Coro]
+G           D
+Yo sé que vive
+Em          C
+Mi Señor Jesús
+
+[Estrofa 2]
+G              D
+Aunque pase por el fuego
+Em             C
+Él conmigo estará
+
+[Coro]
+G           D
+Yo sé que vive
+Em          C
+Mi Señor Jesús
+EOD;
+
+    [$col1, $col2] = ChordTransposer::dividirLineasEnDosColumnas(explode("\n", $cancion));
+
+    // La columna 2 no debe estar vacía
+    expect($col2)->not->toBeEmpty();
+
+    // La primera línea de la columna 2 DEBE ser un encabezado de sección
+    $primeraLineaCol2 = trim($col2[0]);
+    expect(ChordTransposer::isSectionHeader($primeraLineaCol2))->toBeTrue();
+    expect(in_array($primeraLineaCol2, ['[Coro]', '[Estrofa 2]'], true))->toBeTrue();
+
+    // Verificar que ambas columnas tienen un balance razonable de líneas
+    $totalCol1 = count($col1);
+    $totalCol2 = count($col2);
+    expect(abs($totalCol1 - $totalCol2))->toBeLessThanOrEqual(6);
+});
+
+test('divide canciones sin encabezados usando saltos de estrofa', function () {
+    $cancionSinHeaders = <<<'EOD'
+Línea 1
+Línea 2
+
+Línea 3
+Línea 4
+EOD;
+
+    [$col1, $col2] = ChordTransposer::dividirLineasEnDosColumnas(explode("\n", $cancionSinHeaders));
+
+    expect($col1)->toBe(['Línea 1', 'Línea 2']);
+    expect($col2)->toBe(['Línea 3', 'Línea 4']);
+});

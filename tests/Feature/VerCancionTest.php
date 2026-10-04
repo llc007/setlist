@@ -3,6 +3,7 @@
 use App\Models\Cancion;
 use App\Models\Categoria;
 use App\Models\User;
+use App\Services\ChordTransposer;
 use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
@@ -292,10 +293,43 @@ it('can toggle between 1 and 2 columns for song lyrics and chords', function () 
         ->call('toggleColumnas')
         ->assertSet('columnas', 2)
         ->assertSee('2 Columnas')
-        ->assertSee('md:columns-2')
+        ->assertSee('md:grid-cols-2')
         ->call('toggleColumnas')
         ->assertSet('columnas', 1)
         ->assertSee('1 Columna');
+});
+
+it('splits 2 columns starting column 2 with a section header in show view', function () {
+    $user = User::factory()->create();
+    $categoria = Categoria::factory()->create();
+    $letra = <<<'EOD'
+[Estrofa 1]
+[C]Alabaré a mi Dios
+[G]Por su gran amor
+
+[Coro]
+[F]Santo es el Señor
+[C]Digno de honor
+EOD;
+
+    $cancion = Cancion::factory()->create([
+        'categoria_id' => $categoria->id,
+        'titulo' => 'Section Split Song',
+        'tono_original' => 'C',
+        'letra' => $letra,
+        'pdf_path' => null,
+    ]);
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::repertorio.show', ['cancion' => $cancion])
+        ->set('columnas', 2);
+
+    $html = $component->instance()->renderLetraConAcordes($cancion->letra);
+    expect($html)->toContain('md:grid-cols-2');
+
+    // Dividir las líneas directamente para verificar que columna 2 empieza con [Coro]
+    [$col1, $col2] = ChordTransposer::dividirLineasEnDosColumnas(explode("\n", $cancion->letra));
+    expect($col2[0])->toBe('[Coro]');
 });
 
 it('can toggle between 1 and 2 columns in print and fullscreen view', function () {
@@ -313,11 +347,11 @@ it('can toggle between 1 and 2 columns in print and fullscreen view', function (
         ->test('pages::repertorio.imprimir', ['cancion' => $cancion])
         ->assertSet('columnas', 1)
         ->assertSee('1 Columna')
-        ->assertDontSee('print:columns-2')
+        ->assertDontSee('print:grid-cols-2')
         ->call('toggleColumnas')
         ->assertSet('columnas', 2)
         ->assertSee('2 Columnas')
-        ->assertSee('print:columns-2')
+        ->assertSee('print:grid-cols-2')
         ->assertSee('max-w-7xl')
         ->call('toggleColumnas')
         ->assertSet('columnas', 1)
@@ -338,6 +372,6 @@ it('loads 2 columns in print view when passed via url query parameter', function
     actingAs($user)
         ->get(route('canciones.imprimir', ['cancion' => $cancion, 'columnas' => 2]))
         ->assertOk()
-        ->assertSee('print:columns-2')
+        ->assertSee('print:grid-cols-2')
         ->assertSee('2 Columnas');
 });

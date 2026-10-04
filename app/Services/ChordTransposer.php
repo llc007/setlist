@@ -234,4 +234,223 @@ class ChordTransposer
 
         return implode("\n", $resultado);
     }
+
+    /**
+     * Determina si una línea es un encabezado de sección musical (ej. [Coro], [Estrofa 2], Coro:, etc.).
+     */
+    public static function isSectionHeader(string $linea): bool
+    {
+        $linea = trim($linea);
+        if ($linea === '') {
+            return false;
+        }
+
+        // Encabezados en corchetes: [Intro], [Estrofa 1], [Coro], [Puente], etc.
+        if (preg_match('/^\s*\[([^\]]+)\]/i', $linea, $m)) {
+            return ! self::isAcordeToken($m[1]);
+        }
+
+        $secciones = 'intro|estrofa|verso|verse|coro|chorus|puente|bridge|pre-?coro|pre-?chorus|solo|outro|final|coda|interludio|interlude|instrumental';
+
+        // Sin corchetes con dos puntos: "Coro:", "Estrofa 1:", "Puente:"
+        if (preg_match('/^\s*('.$secciones.')(\s+\d+)?\s*:/i', $linea)) {
+            return true;
+        }
+
+        // Línea aislada que sólo contiene el nombre de la sección: "Coro", "Estrofa 2"
+        if (preg_match('/^\s*('.$secciones.')(\s+\d+)?\s*$/i', $linea)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Divide las líneas de una canción en dos columnas equilibradas de forma inteligente.
+     * La columna 2 siempre comenzará con el inicio de una sección (ej. [Coro], [Estrofa 2], etc.)
+     * cuando existan secciones identificables en la canción.
+     *
+     * @param  array<int, string>  $lineas
+     * @return array{0: array<int, string>, 1: array<int, string>}
+     */
+    public static function dividirLineasEnDosColumnas(array $lineas): array
+    {
+        $totalLineas = count($lineas);
+        if ($totalLineas <= 1) {
+            return [$lineas, []];
+        }
+
+        // 1. Agrupar las líneas en bloques/secciones
+        $secciones = [];
+        $seccionActual = [
+            'esHeader' => false,
+            'header' => null,
+            'lineas' => [],
+        ];
+
+        foreach ($lineas as $lineaOriginal) {
+            $linea = rtrim($lineaOriginal, "\r\n");
+            $esHeader = self::isSectionHeader($linea);
+
+            if ($esHeader && (! empty($seccionActual['lineas']) || $seccionActual['esHeader'])) {
+                $secciones[] = $seccionActual;
+                $seccionActual = [
+                    'esHeader' => true,
+                    'header' => trim($linea),
+                    'lineas' => [$lineaOriginal],
+                ];
+            } else {
+                if ($esHeader) {
+                    $seccionActual['esHeader'] = true;
+                    $seccionActual['header'] = trim($linea);
+                }
+                $seccionActual['lineas'][] = $lineaOriginal;
+            }
+        }
+
+        if (! empty($seccionActual['lineas'])) {
+            $secciones[] = $seccionActual;
+        }
+
+        $numSecciones = count($secciones);
+
+        // Función para calcular peso visual aproximado de una línea
+        $pesoLinea = function (string $l): float {
+            $t = trim($l);
+            if ($t === '') {
+                return 0.4;
+            }
+            if (self::isSectionHeader($l)) {
+                return 1.6;
+            }
+            if (self::isLineaDeAcordes($l) || str_contains($l, '[')) {
+                return 1.3;
+            }
+
+            return 1.0;
+        };
+
+        // Calcular peso de cada sección
+        $pesosSecciones = [];
+        $pesoTotal = 0.0;
+        foreach ($secciones as $idx => $sec) {
+            $p = 0.0;
+            foreach ($sec['lineas'] as $l) {
+                $p += $pesoLinea($l);
+            }
+            $pesosSecciones[$idx] = $p;
+            $pesoTotal += $p;
+        }
+
+        // 2. Buscar punto de división óptimo donde la sección candidata empiece con encabezado
+        $candidatosHeader = [];
+        for ($i = 1; $i < $numSecciones; $i++) {
+            if ($secciones[$i]['esHeader']) {
+                $candidatosHeader[] = $i;
+            }
+        }
+
+        $mejorIndiceSeccion = null;
+
+        if (! empty($candidatosHeader)) {
+            $mejorScore = PHP_FLOAT_MAX;
+
+            foreach ($candidatosHeader as $candIdx) {
+                $pesoCol1 = 0.0;
+                for ($j = 0; $j < $candIdx; $j++) {
+                    $pesoCol1 += $pesosSecciones[$j];
+                }
+                $pesoCol2 = $pesoTotal - $pesoCol1;
+
+                $diff = abs($pesoCol1 - $pesoCol2);
+
+                // Pequeña preferencia a que columna 1 sea igual o ligeramente mayor que columna 2
+                if ($pesoCol1 < $pesoCol2) {
+                    $diff += 0.5;
+                }
+
+                // Bonificación a secciones principales (Coro, Estrofa, Puente, Verso)
+                $hdr = strtolower($secciones[$candIdx]['header'] ?? '');
+                if (preg_match('/(coro|chorus|estrofa|verso|verse|puente|bridge)/i', $hdr)) {
+                    $diff -= 0.6;
+                }
+
+                if ($diff < $mejorScore) {
+                    $mejorScore = $diff;
+                    $mejorIndiceSeccion = $candIdx;
+                }
+            }
+        }
+
+        // 3. Fallback: Si no hay encabezados de sección a partir del índice 1
+        if ($mejorIndiceSeccion === null) {
+            // Intentar dividir por estrofas (líneas en blanco)
+            $lineasVacias = [];
+            foreach ($lineas as $idx => $l) {
+                if (trim($l) === '' && $idx > 0 && $idx < $totalLineas - 1) {
+                    $lineasVacias[] = $idx;
+                }
+            }
+
+            if (! empty($lineasVacias)) {
+                $mitad = $totalLineas / 2;
+                $mejorLineaVacia = null;
+                $menorDistancia = PHP_FLOAT_MAX;
+
+                foreach ($lineasVacias as $lv) {
+                    $dist = abs($lv - $mitad);
+                    if ($dist < $menorDistancia) {
+                        $menorDistancia = $dist;
+                        $mejorLineaVacia = $lv;
+                    }
+                }
+
+                $col1 = array_slice($lineas, 0, $mejorLineaVacia);
+                $col2 = array_slice($lineas, $mejorLineaVacia + 1);
+            } else {
+                // Si no hay líneas vacías, dividir por la mitad de líneas
+                $corte = (int) ceil($totalLineas / 2);
+                $col1 = array_slice($lineas, 0, $corte);
+                $col2 = array_slice($lineas, $corte);
+            }
+        } else {
+            // Unir líneas de secciones para columna 1 y columna 2
+            $col1 = [];
+            for ($i = 0; $i < $mejorIndiceSeccion; $i++) {
+                foreach ($secciones[$i]['lineas'] as $l) {
+                    $col1[] = $l;
+                }
+            }
+
+            $col2 = [];
+            for ($i = $mejorIndiceSeccion; $i < $numSecciones; $i++) {
+                foreach ($secciones[$i]['lineas'] as $l) {
+                    $col2[] = $l;
+                }
+            }
+        }
+
+        // 4. Limpiar líneas vacías al final de col1 y al inicio de col2
+        while (! empty($col1) && trim(end($col1)) === '') {
+            array_pop($col1);
+        }
+
+        while (! empty($col2) && trim(reset($col2)) === '') {
+            array_shift($col2);
+        }
+
+        return [$col1, $col2];
+    }
+
+    /**
+     * Divide el texto de una canción en dos columnas equilibradas de forma inteligente.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function dividirTextoEnDosColumnas(string $texto): array
+    {
+        [$col1, $col2] = self::dividirLineasEnDosColumnas(explode("\n", $texto));
+
+        return [implode("\n", $col1), implode("\n", $col2)];
+    }
 }
