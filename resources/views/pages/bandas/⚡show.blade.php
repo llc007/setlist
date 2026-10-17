@@ -2,10 +2,18 @@
 
 use App\Models\Banda;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('components.layouts.app.sidebar')] class extends Component {
+new #[Layout('components.layouts.app.sidebar')] #[Title('Banda')] class extends Component {
     public Banda $banda;
+
+    public function rendering($view): void
+    {
+        if (! empty($this->banda?->nombre)) {
+            $view->title($this->banda->nombre);
+        }
+    }
 
     public function mount(Banda $banda): void
     {

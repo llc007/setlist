@@ -3,9 +3,10 @@
 use App\Models\Banda;
 use App\Models\User;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('components.layouts.app.sidebar')] class extends Component {
+new #[Layout('components.layouts.app.sidebar')] #[Title('Miembros de Banda')] class extends Component {
     public Banda $banda;
 
     public bool $showAddMemberModal = false;

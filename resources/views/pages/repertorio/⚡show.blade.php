@@ -3,10 +3,18 @@
 use App\Models\Cancion;
 use App\Services\ChordTransposer;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new class extends Component {
+new #[Title('Canción')] class extends Component {
     public Cancion $cancion;
+
+    public function rendering($view): void
+    {
+        if (! empty($this->cancion?->titulo)) {
+            $view->title($this->cancion->titulo);
+        }
+    }
 
     public $transposicion = 0;
     public $tonoActual;

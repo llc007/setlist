@@ -7,9 +7,10 @@ use App\Models\Setlist;
 use Flux\Flux;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('components.layouts.app.sidebar')] class extends Component {
+new #[Layout('components.layouts.app.sidebar')] #[Title('Setlist')] class extends Component {
     public Banda $banda;
     public Setlist $setlist;
 

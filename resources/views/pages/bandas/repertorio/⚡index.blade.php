@@ -4,11 +4,12 @@ use App\Models\Banda;
 use App\Models\Cancion;
 use App\Models\Categoria;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Layout('components.layouts.app.sidebar')] class extends Component {
+new #[Layout('components.layouts.app.sidebar')] #[Title('Repertorio de Banda')] class extends Component {
     use WithPagination;
 
     public Banda $banda;

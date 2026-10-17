@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Setlist') }} — El setlist perfecto para tu banda en vivo</title>
+    <title>{{ config('app.name', 'Que Cantamos') }} — El setlist perfecto para tu banda en vivo</title>
     <meta name="description" content="Organiza tu repertorio, sincroniza tonos y acordes al instante, y comparte setlists interactivos para tus ensayos y presentaciones en vivo.">
 
     <link rel="icon" href="/favicon.ico" sizes="any">
