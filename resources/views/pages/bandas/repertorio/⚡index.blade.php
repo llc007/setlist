@@ -310,40 +310,43 @@ new #[Layout('components.layouts.app.sidebar')] #[Title('Repertorio de Banda')] 
     </div>
 
     <!-- Tabla de Canciones del Repertorio -->
-    <div class="p-6 border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
+    <div class="p-3 sm:p-6 border border-zinc-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-900 shadow-sm">
         <flux:table>
             <flux:table.columns>
-                <flux:table.column class="first:!ps-6">{{ __('Título y Artista') }}</flux:table.column>
-                <flux:table.column>{{ __('Categoría') }}</flux:table.column>
-                <flux:table.column>{{ __('Tono Original') }}</flux:table.column>
-                <flux:table.column>{{ __('Visibilidad') }}</flux:table.column>
-                <flux:table.column align="center" class="last:!pe-6">{{ __('Acciones') }}</flux:table.column>
+                <flux:table.column class="first:!ps-2 sm:first:!ps-6">
+                    <span class="sm:hidden">{{ __('Título') }}</span>
+                    <span class="hidden sm:inline">{{ __('Título y Artista') }}</span>
+                </flux:table.column>
+                <flux:table.column class="hidden sm:table-cell">{{ __('Categoría') }}</flux:table.column>
+                <flux:table.column class="hidden sm:table-cell">{{ __('Tono Original') }}</flux:table.column>
+                <flux:table.column class="hidden sm:table-cell">{{ __('Visibilidad') }}</flux:table.column>
+                <flux:table.column align="center" class="last:!pe-2 sm:last:!pe-6">{{ __('Acciones') }}</flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
                 @forelse ($canciones as $cancion)
                     <flux:table.row wire:key="banda-cancion-{{ $cancion->id }}">
-                        <flux:table.cell class="first:!ps-6 font-medium text-zinc-900 dark:text-zinc-100">
+                        <flux:table.cell class="first:!ps-2 sm:first:!ps-6 font-medium text-zinc-900 dark:text-zinc-100">
                             <div class="font-semibold">{{ $cancion->titulo }}</div>
-                            <div class="text-xs text-zinc-500">{{ $cancion->artista ?? 'Sin artista' }}</div>
+                            <div class="hidden sm:block text-xs text-zinc-500">{{ $cancion->artista ?? 'Sin artista' }}</div>
                         </flux:table.cell>
 
-                        <flux:table.cell>
+                        <flux:table.cell class="hidden sm:table-cell">
                             <flux:badge color="zinc" size="sm">{{ $cancion->categoria->nombre ?? 'General' }}</flux:badge>
                         </flux:table.cell>
 
-                        <flux:table.cell class="font-medium text-xs">
+                        <flux:table.cell class="hidden sm:table-cell font-medium text-xs">
                             {{ $cancion->tono_original ?? 'N/A' }}
                         </flux:table.cell>
 
-                        <flux:table.cell>
+                        <flux:table.cell class="hidden sm:table-cell">
                             <flux:badge color="{{ $cancion->es_publica ? 'sky' : 'amber' }}" size="sm">
                                 {{ $cancion->es_publica ? 'Pública' : 'Privada de Banda' }}
                             </flux:badge>
                         </flux:table.cell>
 
-                        <flux:table.cell align="center" class="last:!pe-6">
-                            <div class="flex items-center justify-center gap-2">
+                        <flux:table.cell align="center" class="last:!pe-2 sm:last:!pe-6">
+                            <div class="flex items-center justify-end sm:justify-center gap-1 sm:gap-2">
                                 <flux:button
                                     variant="ghost"
                                     icon="eye"

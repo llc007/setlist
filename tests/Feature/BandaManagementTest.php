@@ -177,3 +177,27 @@ it('permite editar rápidamente el título, artista y categoría de una canción
         ->and($cancion->artista)->toBe('Artista Actualizado')
         ->and($cancion->categoria_id)->toBe($catNueva->id);
 });
+
+it('renderiza la tabla del repertorio de banda de forma responsiva ocultando columnas secundarias en móvil', function () {
+    $user = User::factory()->create();
+    $banda = Banda::create([
+        'nombre' => 'Banda Responsiva',
+        'slug' => 'banda-responsiva',
+    ]);
+    $banda->miembros()->attach($user->id, ['rol' => 'Administrador de Banda']);
+
+    $cancion = Cancion::create([
+        'titulo' => 'Canción Móvil',
+        'artista' => 'Artista Oculto en Móvil',
+        'tono_original' => 'G',
+        'es_publica' => true,
+    ]);
+
+    $banda->repertorio()->attach($cancion->id);
+
+    Livewire::actingAs($user)
+        ->test('pages::bandas.repertorio.index', ['banda' => $banda])
+        ->assertSee('Canción Móvil')
+        ->assertSeeHtml('hidden sm:table-cell')
+        ->assertSeeHtml('hidden sm:block text-xs text-zinc-500');
+});
