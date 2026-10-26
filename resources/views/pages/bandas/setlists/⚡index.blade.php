@@ -4,9 +4,10 @@ use App\Models\Banda;
 use App\Models\Setlist;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('components.layouts.app.sidebar')] class extends Component {
+new #[Layout('components.layouts.app.sidebar')] #[Title('Setlists')] class extends Component {
     public Banda $banda;
 
     public bool $showCreateModal = false;

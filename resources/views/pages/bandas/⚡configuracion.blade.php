@@ -4,9 +4,10 @@ use App\Models\Banda;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('components.layouts.app.sidebar')] class extends Component {
+new #[Layout('components.layouts.app.sidebar')] #[Title('Configuración de Banda')] class extends Component {
     public Banda $banda;
 
     public string $nombre = '';

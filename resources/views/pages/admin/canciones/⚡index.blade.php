@@ -3,10 +3,11 @@
 use App\Models\Cancion;
 use App\Models\Categoria;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component {
+new #[Title('Gestión de Canciones')] class extends Component {
     use WithPagination;
 
     public $buscar = '';
