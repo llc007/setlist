@@ -124,11 +124,11 @@ new class extends Component {
         return ChordTransposer::transponerAcorde($acorde, $semitonos);
     }
 
-    public int $tamanioLetra = 16;
+    public int $tamanioLetra = 12;
 
     public function cambiarTamanioLetra(int $delta): void
     {
-        $this->tamanioLetra = max(12, min(28, $this->tamanioLetra + $delta));
+        $this->tamanioLetra = max(10, min(28, $this->tamanioLetra + $delta));
     }
 
     public function isAcordeToken(string $token): bool
@@ -141,7 +141,7 @@ new class extends Component {
         return ChordTransposer::isLineaDeAcordes($linea);
     }
 
-    public int $columnas = 1;
+    public int $columnas = 2;
 
     public function toggleColumnas(): void
     {
@@ -229,8 +229,8 @@ new class extends Component {
                     } else {
                         $textoSegmento = htmlspecialchars($parte);
                         $html .= '<div class="inline-flex flex-col justify-end text-left pr-1.5">';
-                        $html .= '<span class="font-bold text-[#1ed760] text-xs sm:text-sm h-4 leading-none font-mono">' . $acordeActual . '</span>';
-                        $html .= '<span class="text-zinc-900 dark:text-zinc-100 text-sm sm:text-base leading-tight">' . ($textoSegmento !== '' ? $textoSegmento : '&nbsp;') . '</span>';
+                        $html .= '<span class="font-bold text-[#1ed760] text-[0.9em] h-4 leading-none font-mono">' . $acordeActual . '</span>';
+                        $html .= '<span class="text-zinc-900 dark:text-zinc-100 leading-tight">' . ($textoSegmento !== '' ? $textoSegmento : '&nbsp;') . '</span>';
                         $html .= '</div>';
                         $acordeActual = '';
                     }
@@ -426,7 +426,7 @@ new class extends Component {
                 </div>
 
                 <!-- Contenedor del Editor Visual -->
-                <div x-show="tab === 'visual'" class="p-4 md:p-6 overflow-y-auto max-h-[750px] font-mono select-text bg-white dark:bg-[#121212] space-y-3">
+                <div x-show="tab === 'visual'" class="p-4 md:p-6 overflow-y-auto max-h-[940px] font-mono select-text bg-white dark:bg-[#121212] space-y-3">
                     <!-- Medidor oculto de ancho de carácter para alineación exacta -->
                     <span x-ref="measureSpan" class="font-mono text-sm sm:text-base invisible absolute -left-[9999px] whitespace-pre select-none pointer-events-none">01234567890123456789</span>
 
@@ -532,7 +532,7 @@ new class extends Component {
                 <!-- Modo Texto Plano -->
                 <div x-show="tab === 'raw'" class="p-4 md:p-6 bg-white dark:bg-[#18181b] flex flex-col h-full">
                     <p class="text-xs text-zinc-500 mb-2">Edita el texto con acordes directamente. Al volver a la pestaña <b>Visual</b>, los cambios se sincronizarán automáticamente.</p>
-                    <textarea x-model="rawText" class="w-full h-[600px] font-mono p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-[#1ed760]/30 focus:border-[#1ed760]"></textarea>
+                    <textarea x-model="rawText" class="w-full h-[750px] font-mono p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-[#1ed760]/30 focus:border-[#1ed760]"></textarea>
                 </div>
 
                 <!-- Modal Flotante de Edición de Acorde -->
@@ -684,11 +684,11 @@ new class extends Component {
                 @endif
             </div>
 
-            <div class="p-0 min-h-[600px] w-full bg-white dark:bg-[#121212]">
+            <div class="p-0 min-h-[750px] w-full bg-white dark:bg-[#121212]">
                 @if($this->pdfUrl)
-                    <iframe src="{{ $this->pdfUrl }}" class="w-full h-[800px]" frameborder="0"></iframe>
+                    <iframe src="{{ $this->pdfUrl }}" class="w-full h-[1000px]" frameborder="0"></iframe>
                 @else
-                    <div class="p-4 sm:p-6 md:p-8 overflow-y-auto max-h-[850px] font-mono select-text bg-white dark:bg-[#121212]">
+                    <div class="p-4 sm:p-6 md:p-8 overflow-y-auto min-h-[750px] max-h-[1065px] font-mono select-text bg-white dark:bg-[#121212]">
                         @if(empty(trim($cancion->letra ?? '')))
                             <div class="flex flex-col items-center justify-center py-16 text-center">
                                 <span class="material-symbols-outlined text-4xl text-zinc-400 mb-2">queue_music</span>

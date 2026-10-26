@@ -288,15 +288,19 @@ it('can toggle between 1 and 2 columns for song lyrics and chords', function () 
 
     Livewire::actingAs($user)
         ->test('pages::repertorio.show', ['cancion' => $cancion])
+        ->assertSet('tamanioLetra', 12)
+        ->assertSet('columnas', 2)
+        ->assertSee('12px')
+        ->assertSee('2 Columnas')
+        ->assertSee('md:grid-cols-2')
+        ->assertSee('min-h-[750px]')
+        ->assertSee('max-h-[1065px]')
+        ->call('toggleColumnas')
         ->assertSet('columnas', 1)
         ->assertSee('1 Columna')
         ->call('toggleColumnas')
         ->assertSet('columnas', 2)
-        ->assertSee('2 Columnas')
-        ->assertSee('md:grid-cols-2')
-        ->call('toggleColumnas')
-        ->assertSet('columnas', 1)
-        ->assertSee('1 Columna');
+        ->assertSee('2 Columnas');
 });
 
 it('splits 2 columns starting column 2 with a section header in show view', function () {

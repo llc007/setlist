@@ -25,6 +25,7 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
     // Modales
     public bool $showCreateModal = false;
     public bool $showImportModal = false;
+    public bool $showEditModal = false;
 
     // Campos Nueva Canción
     public string $titulo = '';
@@ -33,6 +34,12 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
     public string $tono_original = '';
     public string $categoria_id = '';
     public bool $es_publica = true;
+
+    // Campos Edición Rápida
+    public ?int $editingCancionId = null;
+    public string $editTitulo = '';
+    public string $editArtista = '';
+    public string $editCategoriaId = '';
 
     // Búsqueda para importar
     public string $importSearch = '';
@@ -56,6 +63,13 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
 
     public function updatedVisibilidad(): void
     {
+        $this->resetPage();
+    }
+
+    public function filterByCategoria(string|int $id = ''): void
+    {
+        $id = (string) $id;
+        $this->categoriaId = ($id !== '' && $this->categoriaId === $id) ? '' : $id;
         $this->resetPage();
     }
 
@@ -97,6 +111,43 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
 
         session()->flash('status', 'Canción agregada al repertorio de la banda.');
         $this->showCreateModal = false;
+    }
+
+    public function openEditModal(int $cancionId): void
+    {
+        $this->resetErrorBag();
+        $cancion = $this->banda->repertorio()->findOrFail($cancionId);
+
+        $this->editingCancionId = $cancion->id;
+        $this->editTitulo = $cancion->titulo;
+        $this->editArtista = $cancion->artista ?? '';
+        $this->editCategoriaId = $cancion->categoria_id ? (string) $cancion->categoria_id : '';
+        $this->showEditModal = true;
+    }
+
+    public function updateCancion(): void
+    {
+        if (! $this->editingCancionId) {
+            return;
+        }
+
+        $validated = $this->validate([
+            'editTitulo' => ['required', 'string', 'max:255'],
+            'editArtista' => ['nullable', 'string', 'max:255'],
+            'editCategoriaId' => ['nullable', 'exists:categorias,id'],
+        ]);
+
+        $cancion = $this->banda->repertorio()->findOrFail($this->editingCancionId);
+
+        $cancion->update([
+            'titulo' => $validated['editTitulo'],
+            'artista' => ! empty($validated['editArtista']) ? $validated['editArtista'] : null,
+            'categoria_id' => ! empty($validated['editCategoriaId']) ? $validated['editCategoriaId'] : null,
+        ]);
+
+        session()->flash('status', 'Información de la canción actualizada correctamente.');
+        $this->showEditModal = false;
+        $this->editingCancionId = null;
     }
 
     public function openImportModal(): void
@@ -148,7 +199,7 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
                 }
             });
 
-        $canciones = $repertorioQuery->paginate(12);
+        $canciones = $repertorioQuery->paginate(30);
         $categorias = Categoria::orderBy('nombre')->get();
 
         // Canciones públicas globales disponibles para importar
@@ -196,32 +247,65 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
     @endif
 
     <!-- Filtros y Búsqueda -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-        <div class="flex-1">
-            <flux:input
-                wire:model.live.debounce.300ms="search"
-                icon="magnifying-glass"
-                placeholder="Buscar por título o artista..."
-                clearable
-            />
+    <div class="space-y-3 bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <div class="flex-1">
+                <flux:input
+                    wire:model.live.debounce.300ms="search"
+                    icon="magnifying-glass"
+                    placeholder="Buscar por título o artista..."
+                    clearable
+                />
+            </div>
+
+            <div class="w-full sm:w-56">
+                <flux:select wire:model.live="categoriaId" placeholder="Categoría: Todas">
+                    <flux:select.option value="">{{ __('Todas las Categorías') }}</flux:select.option>
+                    @foreach ($categorias as $cat)
+                        <flux:select.option value="{{ $cat->id }}">{{ $cat->nombre }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+            </div>
+
+            <div class="w-full sm:w-48">
+                <flux:select wire:model.live="visibilidad" placeholder="Visibilidad: Todas">
+                    <flux:select.option value="">{{ __('Todas') }}</flux:select.option>
+                    <flux:select.option value="publica">{{ __('Públicas') }}</flux:select.option>
+                    <flux:select.option value="privada">{{ __('Privadas') }}</flux:select.option>
+                </flux:select>
+            </div>
         </div>
 
-        <div class="w-full sm:w-56">
-            <flux:select wire:model.live="categoriaId" placeholder="Categoría: Todas">
-                <flux:select.option value="">{{ __('Todas las Categorías') }}</flux:select.option>
+        @if ($categorias->isNotEmpty())
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+                <flux:badge
+                    as="button"
+                    rounded
+                    size="sm"
+                    :variant="$categoriaId === '' ? 'solid' : null"
+                    :color="$categoriaId === '' ? 'indigo' : 'zinc'"
+                    wire:click="filterByCategoria('')"
+                    class="cursor-pointer transition"
+                >
+                    {{ __('Todas') }}
+                </flux:badge>
+
                 @foreach ($categorias as $cat)
-                    <flux:select.option value="{{ $cat->id }}">{{ $cat->nombre }}</flux:select.option>
+                    <flux:badge
+                        wire:key="badge-cat-{{ $cat->id }}"
+                        as="button"
+                        rounded
+                        size="sm"
+                        :variant="(string) $categoriaId === (string) $cat->id ? 'solid' : null"
+                        :color="(string) $categoriaId === (string) $cat->id ? 'indigo' : 'zinc'"
+                        wire:click="filterByCategoria('{{ $cat->id }}')"
+                        class="cursor-pointer transition"
+                    >
+                        {{ $cat->nombre }}
+                    </flux:badge>
                 @endforeach
-            </flux:select>
-        </div>
-
-        <div class="w-full sm:w-48">
-            <flux:select wire:model.live="visibilidad" placeholder="Visibilidad: Todas">
-                <flux:select.option value="">{{ __('Todas') }}</flux:select.option>
-                <flux:select.option value="publica">{{ __('Públicas') }}</flux:select.option>
-                <flux:select.option value="privada">{{ __('Privadas') }}</flux:select.option>
-            </flux:select>
-        </div>
+            </div>
+        @endif
     </div>
 
     <!-- Tabla de Canciones del Repertorio -->
@@ -266,6 +350,14 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
                                     :href="route('ver-cancion', $cancion->id)"
                                     wire:navigate
                                     title="Ver detalles"
+                                />
+
+                                <flux:button
+                                    variant="ghost"
+                                    icon="pencil-square"
+                                    size="sm"
+                                    wire:click="openEditModal({{ $cancion->id }})"
+                                    title="Edición rápida"
                                 />
 
                                 <flux:button
@@ -333,6 +425,37 @@ new #[Layout('components.layouts.app.sidebar')] class extends Component {
                 </flux:button>
                 <flux:button type="submit" variant="primary">
                     {{ __('Guardar Canción') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    <!-- Modal Edición Rápida de Canción -->
+    <flux:modal wire:model="showEditModal" name="edit-cancion-modal" class="max-w-md">
+        <form wire:submit="updateCancion" class="space-y-6">
+            <div>
+                <flux:heading size="lg">{{ __('Edición Rápida de Canción') }}</flux:heading>
+                <flux:text variant="subtle">{{ __('Actualiza el título, artista o categoría de la canción.') }}</flux:text>
+            </div>
+
+            <div class="space-y-4">
+                <flux:input wire:model="editTitulo" label="Título de la Canción" required />
+                <flux:input wire:model="editArtista" label="Artista / Autor" />
+
+                <flux:select wire:model="editCategoriaId" label="Categoría">
+                    <flux:select.option value="">{{ __('Sin categoría') }}</flux:select.option>
+                    @foreach ($categorias as $cat)
+                        <flux:select.option value="{{ $cat->id }}">{{ $cat->nombre }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+            </div>
+
+            <div class="flex items-center justify-end gap-3">
+                <flux:button variant="outline" wire:click="$set('showEditModal', false)">
+                    {{ __('Cancelar') }}
+                </flux:button>
+                <flux:button type="submit" variant="primary">
+                    {{ __('Guardar Cambios') }}
                 </flux:button>
             </div>
         </form>
